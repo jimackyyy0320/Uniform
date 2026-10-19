@@ -1,0 +1,2869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magtanggol Integrated School | Senior High School Uniform Proposal & 3D Cloth Studio</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js Core + GLTFLoader + OrbitControls for Engine 2 (Real Baked 3D Cloth Mesh) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        display: ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        mis: {
+                            sage: '#b5c7b3',
+                            forest: '#164226',
+                            lime: '#7ce636',
+                            gold: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Studio Backdrop Themes */
+        .studio-light {
+            background: radial-gradient(circle at 52% 44%, #ffffff 0%, #eef1ed 52%, #d9dfd8 100%);
+            color: #0f2417;
+        }
+        .studio-dark {
+            background: radial-gradient(circle at 52% 44%, #1e3124 0%, #101b14 55%, #070d09 100%);
+            color: #f1f5f2;
+        }
+
+        /* Glassmorphic Executive Floating Docks */
+        .glass-dock {
+            background: rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(22, 66, 38, 0.14);
+            box-shadow: 0 12px 36px rgba(15, 36, 23, 0.09);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .studio-dark .glass-dock {
+            background: rgba(14, 25, 18, 0.82);
+            border: 1px solid rgba(181, 199, 179, 0.18);
+            box-shadow: 0 16px 42px rgba(0, 0, 0, 0.48);
+            color: #eef3ef;
+        }
+
+        /* Callout Magnifier Circles (Matching Female & Male Shirt Detail Sheets) */
+        .detail-callout-ring {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), inset 0 0 0 3px #164226;
+        }
+        .detail-callout-ring:hover, .detail-callout-ring.active-ring {
+            transform: scale(1.06);
+            box-shadow: 0 14px 34px rgba(22, 66, 38, 0.35), inset 0 0 0 4px #2e7d47;
+        }
+
+        /* Optical Magnifier Loupe Floating Cursor */
+        #opticalLoupe {
+            pointer-events: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.38), 0 0 0 4px #164226, inset 0 0 18px rgba(0,0,0,0.22);
+            transition: opacity 0.2s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(22, 66, 38, 0.25);
+            border-radius: 9999px;
+        }
+        .studio-dark ::-webkit-scrollbar-thumb {
+            background: rgba(181, 199, 179, 0.28);
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            #printModal { display: flex !important; position: static !important; background: white !important; }
+        }
+    </style>
+</head>
+<body id="appBody" class="studio-light transition-colors duration-500">
+
+    <!-- ===================================================================== -->
+    <!-- TOP EXECUTIVE HEADER BAR                                              -->
+    <!-- ===================================================================== -->
+    <header class="fixed top-3 left-3 right-3 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none no-print">
+        <!-- Left: School Seal + Official Proposal Title -->
+        <div class="glass-dock rounded-2xl px-3.5 py-2 flex items-center gap-3 pointer-events-auto">
+            <button onclick="openSealInspector()" class="w-11 h-11 rounded-full flex-shrink-0 border-2 border-[#164226] bg-white shadow-sm overflow-hidden hover:scale-105 transition" title="Inspect Official Magtanggol Integrated School Seal">
+                <canvas id="headerSealCanvas" width="120" height="120" class="w-full h-full"></canvas>
+            </button>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-[#164226] text-white">
+                        DepEd • Science City of Muñoz
+                    </span>
+                    <span class="hidden sm:inline text-[10px] font-semibold opacity-65">Nueva Ecija • Est. 2012</span>
+                </div>
+                <h1 class="font-serif font-bold text-sm sm:text-base md:text-lg leading-tight tracking-tight">
+                    Magtanggol Integrated School — Senior High School Uniform Proposal
+                </h1>
+            </div>
+        </div>
+
+        <!-- Center: Dual-Engine Switcher (Engine 1: Studio Cloth Mockup vs Engine 2: 3D GLB Mesh Viewer) -->
+        <div class="glass-dock rounded-2xl p-1.5 flex items-center gap-1 pointer-events-auto">
+            <button id="engineBtn-studio" onclick="switchRenderEngine('studio')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-shirt"></i>
+                <span>Studio Cloth Mockup</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-white/20 uppercase">Tailored</span>
+            </button>
+            <button id="engineBtn-glb" onclick="switchRenderEngine('glb')" class="px-3 py-1.5 rounded-xl text-xs font-semibold opacity-80 hover:opacity-100 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-cube"></i>
+                <span>3D GLB Mesh Viewer</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-800/15 dark:bg-white/10 uppercase">shirt_baked.glb</span>
+            </button>
+        </div>
+
+        <!-- Right: Presentation Auto-Play, Theme & Print Actions -->
+        <div class="glass-dock rounded-2xl px-3 py-1.5 flex items-center gap-2 pointer-events-auto">
+            <button id="btnAutoPlay" onclick="toggleAutoPlayPresentation()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center gap-1.5 transition" title="Auto-Play Slide Presentation">
+                <i id="autoPlayIcon" class="fa-solid fa-play text-[10px]"></i>
+                <span class="hidden md:inline">Auto-Play</span>
+            </button>
+
+            <button id="btnAutoTurntable" onclick="toggleAutoTurntable()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center gap-1.5 transition" title="Toggle 3D Perspective Turntable Motion">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span class="hidden xl:inline">3D Motion</span>
+            </button>
+
+            <button onclick="toggleStudioTheme()" class="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-900/10 hover:bg-emerald-900/20 transition" title="Switch Light/Dark Studio Backdrop">
+                <i id="themeToggleIcon" class="fa-solid fa-moon text-xs"></i>
+            </button>
+
+            <button onclick="openPrintModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] hover:bg-[#1e5632] text-white shadow flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-file-signature"></i>
+                <span class="hidden sm:inline">Proposal Sheet</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN INTERACTIVE VIEWPORT STAGE (ENGINE 1 & ENGINE 2 CANVASES)        -->
+    <!-- ===================================================================== -->
+    <main id="viewportStage" class="fixed inset-0 w-full h-full z-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+
+        <!-- ENGINE 1: High-DPI Photorealistic Studio Cloth & Drape Compositor Canvas -->
+        <canvas id="studioClothCanvas" class="w-full h-full block"></canvas>
+
+        <!-- ENGINE 2: Real 3D GLTF Baked Cloth Model (`shirt_baked.glb`) WebGL Container -->
+        <div id="glbViewerContainer" class="fixed inset-0 w-full h-full hidden">
+            <canvas id="glbWebGLCanvas" class="w-full h-full block"></canvas>
+            <!-- GLB Status Badge -->
+            <div id="glbStatusBanner" class="fixed top-20 left-1/2 -translate-x-1/2 z-20 glass-dock px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 pointer-events-none">
+                <span id="glbStatusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                <span id="glbStatusText">Loading real sculpted cloth mesh (shirt_baked.glb)...</span>
+            </div>
+        </div>
+
+        <!-- Optical Magnifier Loupe Lens (High-DPI Cloth Weave & Stitching Zoom) -->
+        <div id="opticalLoupe" class="fixed w-48 h-48 rounded-full overflow-hidden hidden z-40 bg-white">
+            <canvas id="loupeCanvas" width="384" height="384" class="w-full h-full block"></canvas>
+            <div class="absolute bottom-2 inset-x-0 text-center">
+                <span id="loupeCaption" class="px-2 py-0.5 rounded-full bg-[#164226]/90 text-white text-[9px] font-bold uppercase tracking-wider shadow">
+                    2.5x Cloth Weave Loupe
+                </span>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- LEFT COLLAPSIBLE INSPECTOR / SLIDE NARRATIVE & SPECS PANEL            -->
+    <!-- ===================================================================== -->
+    <aside id="leftInspectorWrap" class="fixed left-3 top-20 bottom-20 z-20 flex items-start pointer-events-none no-print">
+        <div id="leftInspectorPanel" class="glass-dock rounded-3xl w-80 sm:w-88 max-h-full flex flex-col justify-between p-4 pointer-events-auto overflow-y-auto transition-all duration-300">
+            <div>
+                <!-- Slide Badge & Collapse Button -->
+                <div class="flex items-center justify-between gap-2 border-b border-emerald-950/10 dark:border-white/10 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <span id="slideStepBadge" class="px-2.5 py-0.5 rounded-lg bg-[#164226] text-white text-[10px] font-extrabold uppercase tracking-wider">
+                            Slide 1 of 7
+                        </span>
+                        <span id="slideTagline" class="text-[11px] font-bold opacity-70">Executive Overview</span>
+                    </div>
+                    <button onclick="toggleLeftPanel()" class="w-7 h-7 rounded-lg hover:bg-black/10 flex items-center justify-center text-xs" title="Minimize Narrative Panel">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <!-- Dynamic Slide Headline & Narrative -->
+                <h2 id="slideHeadline" class="font-serif text-lg sm:text-xl font-bold mt-2.5 leading-snug">
+                    Proposed Senior High School Uniform
+                </h2>
+                <p id="slideDescription" class="text-xs opacity-80 mt-1.5 leading-relaxed">
+                    Tailored Ghost-Mannequin Cloth Proposal featuring a refreshing Light Sage Green torso with Deep Forest Green architectural piping and the official Magtanggol Integrated School circular seal.
+                </p>
+
+                <!-- Context-Aware Interactive Detail Callout Buttons (For Slides 3, 4 & General Inspection) -->
+                <div class="mt-3.5 pt-3 border-t border-emerald-950/10 dark:border-white/10">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider opacity-75">
+                            <i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Technical Garment Callouts
+                        </span>
+                        <button onclick="selectDetailCallout(null)" class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline">
+                            Reset Zoom
+                        </button>
+                    </div>
+
+                    <div id="calloutButtonList" class="space-y-1.5">
+                        <button onclick="selectDetailCallout(0)" id="calloutBtn-0" class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition">
+                            <span>1. Two-Tone Collar & Edge Trim</span>
+                            <i class="fa-solid fa-crosshairs text-[10px] opacity-60"></i>
+                        </button>
+                        <button onclick="selectDetailCallout(1)" id="calloutBtn-1" class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition">
+                            <span>2. Left Chest School Seal / Emblem</span>
+                            <i class="fa-solid fa-crosshairs text-[10px] opacity-60"></i>
+                        </button>
+                        <button onclick="selectDetailCallout(2)" id="calloutBtn-2" class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition">
+                            <span>3. Sleeve Cuff & Horizontal Piping</span>
+                            <i class="fa-solid fa-crosshairs text-[10px] opacity-60"></i>
+                        </button>
+                        <button onclick="selectDetailCallout(3)" id="calloutBtn-3" class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition">
+                            <span>4. Twin-Piped 5-Button Placket</span>
+                            <i class="fa-solid fa-crosshairs text-[10px] opacity-60"></i>
+                        </button>
+                        <button onclick="selectDetailCallout(4)" id="calloutBtn-4" class="w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition">
+                            <span>5. Hem Stitching & Side Vent Slits</span>
+                            <i class="fa-solid fa-crosshairs text-[10px] opacity-60"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Textile & Nueva Ecija Climate Spec Box -->
+            <div class="mt-4 pt-3 border-t border-emerald-950/10 dark:border-white/10 text-[11px] space-y-1.5">
+                <div class="font-extrabold uppercase tracking-wider text-[10px] text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group"></i> Textile & Tailoring Spec Sheet
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 bg-emerald-950/5 dark:bg-white/5 p-2.5 rounded-2xl">
+                    <div>
+                        <div class="opacity-65 text-[10px]">Recommended Cloth</div>
+                        <div class="font-bold">CVC Cotton-Poly Twill</div>
+                    </div>
+                    <div>
+                        <div class="opacity-65 text-[10px]">Fabric Weight</div>
+                        <div class="font-bold">165 GSM Breathable</div>
+                    </div>
+                    <div>
+                        <div class="opacity-65 text-[10px]">Muñoz Climate Fit</div>
+                        <div class="font-bold">Cool Moisture-Wicking</div>
+                    </div>
+                    <div>
+                        <div class="opacity-65 text-[10px]">Colorfastness</div>
+                        <div class="font-bold">Grade 4.5 Anti-Fade</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Expand Button when Left Panel is Collapsed -->
+        <button id="leftPanelExpandBtn" onclick="toggleLeftPanel()" class="hidden glass-dock rounded-2xl p-3 pointer-events-auto hover:scale-105 transition" title="Show Slide Narrative & Garment Specs">
+            <i class="fa-solid fa-bars-staggered text-sm"></i>
+        </button>
+    </aside>
+
+    <!-- ===================================================================== -->
+    <!-- RIGHT FLOATING CUSTOMIZATION & STUDIO DOCK                            -->
+    <!-- ===================================================================== -->
+    <aside class="fixed right-3 top-20 bottom-20 z-20 flex items-start pointer-events-none no-print">
+        <div class="glass-dock rounded-3xl w-64 sm:w-72 max-h-full flex flex-col justify-between p-4 pointer-events-auto overflow-y-auto space-y-3.5">
+
+            <!-- 1. DISPLAY MODE SELECTOR -->
+            <div>
+                <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-1.5">
+                    1. Garment Display Mode
+                </div>
+                <div class="grid grid-cols-2 gap-1 text-xs font-semibold">
+                    <button onclick="setDisplayMode('both')" id="modeBtn-both" class="py-1.5 px-2 rounded-xl bg-[#164226] text-white shadow">
+                        Both Shirts
+                    </button>
+                    <button onclick="setDisplayMode('fullOutfit')" id="modeBtn-fullOutfit" class="py-1.5 px-2 rounded-xl bg-emerald-900/10 hover:bg-emerald-900/20">
+                        Full Slacks Outfit
+                    </button>
+                    <button onclick="setDisplayMode('female')" id="modeBtn-female" class="py-1.5 px-2 rounded-xl bg-emerald-900/10 hover:bg-emerald-900/20">
+                        Female Details
+                    </button>
+                    <button onclick="setDisplayMode('male')" id="modeBtn-male" class="py-1.5 px-2 rounded-xl bg-emerald-900/10 hover:bg-emerald-900/20">
+                        Male Details
+                    </button>
+                    <button onclick="setDisplayMode('grid4')" id="modeBtn-grid4" class="col-span-2 py-1.5 px-2 rounded-xl bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-table-cells-large text-[11px]"></i> 4-Colorway Proposal Grid
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. CHEST EMBLEM SWITCHER (OFFICIAL SEAL VS MIS SHS TEXT) -->
+            <div class="pt-2.5 border-t border-emerald-950/10 dark:border-white/10">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-1.5">
+                    2. Left Chest Insignia
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                    <button onclick="setEmblemType('seal')" id="emblemBtn-seal" class="py-2 px-2.5 rounded-xl font-bold bg-[#164226] text-white shadow flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-certificate text-amber-400"></i> School Seal
+                    </button>
+                    <button onclick="setEmblemType('text')" id="emblemBtn-text" class="py-2 px-2.5 rounded-xl font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-font"></i> "MIS SHS"
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. COLORWAY PRESETS + LIVE CUSTOM COLOR PICKERS -->
+            <div class="pt-2.5 border-t border-emerald-950/10 dark:border-white/10">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider opacity-75">3. Uniform Color Shades</span>
+                    <span id="activeShadeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#164226] text-white">Option 1</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <!-- Option 1: Sage & Deep Green -->
+                    <button onclick="applyColorPreset('sage')" id="presetBtn-sage" class="w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold ring-2 ring-[#164226] bg-emerald-900/10 transition">
+                        <span class="w-6 h-6 rounded-full flex-shrink-0 border border-black/20 shadow-inner" style="background: linear-gradient(135deg, #b5c7b3 58%, #164226 58%);"></span>
+                        <div class="leading-tight truncate">
+                            <div class="font-bold">Sage & Deep Green</div>
+                            <div class="text-[10px] opacity-65">Option 1 • Primary Proposal</div>
+                        </div>
+                    </button>
+
+                    <!-- Option 2: Steel Blue & Navy -->
+                    <button onclick="applyColorPreset('blue')" id="presetBtn-blue" class="w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold hover:bg-emerald-900/10 transition">
+                        <span class="w-6 h-6 rounded-full flex-shrink-0 border border-black/20 shadow-inner" style="background: linear-gradient(135deg, #9ab0c7 58%, #16264c 58%);"></span>
+                        <div class="leading-tight truncate">
+                            <div class="font-bold">Steel Blue & Navy</div>
+                            <div class="text-[10px] opacity-65">Option 2 • Collegiate Shade</div>
+                        </div>
+                    </button>
+
+                    <!-- Option 3: Warm Cream & Burgundy -->
+                    <button onclick="applyColorPreset('cream')" id="presetBtn-cream" class="w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold hover:bg-emerald-900/10 transition">
+                        <span class="w-6 h-6 rounded-full flex-shrink-0 border border-black/20 shadow-inner" style="background: linear-gradient(135deg, #dfd1b4 58%, #631c24 58%);"></span>
+                        <div class="leading-tight truncate">
+                            <div class="font-bold">Warm Cream & Burgundy</div>
+                            <div class="text-[10px] opacity-65">Option 3 • Contrast Collar</div>
+                        </div>
+                    </button>
+
+                    <!-- Option 4: Light Sand & Forest Green -->
+                    <button onclick="applyColorPreset('sand')" id="presetBtn-sand" class="w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold hover:bg-emerald-900/10 transition">
+                        <span class="w-6 h-6 rounded-full flex-shrink-0 border border-black/20 shadow-inner" style="background: linear-gradient(135deg, #cfc4b4 58%, #1b4328 58%);"></span>
+                        <div class="leading-tight truncate">
+                            <div class="font-bold">Light Sand & Forest</div>
+                            <div class="text-[10px] opacity-65">Option 4 • Contrast Collar</div>
+                        </div>
+                    </button>
+
+                    <!-- Option 5: Classic White & Green Baseline -->
+                    <button onclick="applyColorPreset('white')" id="presetBtn-white" class="w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold hover:bg-emerald-900/10 transition">
+                        <span class="w-6 h-6 rounded-full flex-shrink-0 border border-black/20 shadow-inner" style="background: linear-gradient(135deg, #f6f7f5 58%, #1b5e32 58%);"></span>
+                        <div class="leading-tight truncate">
+                            <div class="font-bold">Classic White & Green</div>
+                            <div class="text-[10px] opacity-65">Option 5 • Baseline Reference</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Live Custom Color Pickers for Body & Trim -->
+                <div class="mt-2.5 pt-2 border-t border-emerald-950/10 dark:border-white/10 grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 bg-emerald-950/5 dark:bg-white/5 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] font-semibold">
+                        <input type="color" id="customBodyPicker" value="#b5c7b3" onchange="applyCustomColors()" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent">
+                        <span>Torso Cloth</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-emerald-950/5 dark:bg-white/5 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] font-semibold">
+                        <input type="color" id="customTrimPicker" value="#164226" onchange="applyCustomColors()" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent">
+                        <span>Piping/Trim</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 4. VIEW ANGLE & OPTICAL MAGNIFIER LOUPE -->
+            <div class="pt-2.5 border-t border-emerald-950/10 dark:border-white/10">
+                <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-1.5">
+                    4. Camera Angle & Cloth Loupe
+                </div>
+                <div class="grid grid-cols-4 gap-1 text-[11px] font-semibold mb-2">
+                    <button onclick="setStudioAngle('angled')" id="angleBtn-angled" class="py-1.5 rounded-lg bg-[#164226] text-white">3/4 Pose</button>
+                    <button onclick="setStudioAngle('front')" id="angleBtn-front" class="py-1.5 rounded-lg bg-emerald-900/10 hover:bg-emerald-900/20">Front</button>
+                    <button onclick="setStudioAngle('side')" id="angleBtn-side" class="py-1.5 rounded-lg bg-emerald-900/10 hover:bg-emerald-900/20">Profile</button>
+                    <button onclick="setStudioAngle('back')" id="angleBtn-back" class="py-1.5 rounded-lg bg-emerald-900/10 hover:bg-emerald-900/20">Back</button>
+                </div>
+
+                <button onclick="toggleOpticalLoupe()" id="btnLoupeToggle" class="w-full py-2 px-3 rounded-xl text-xs font-bold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Enable Optical Weave Loupe</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===================================================================== -->
+    <!-- BOTTOM SLIDE SCRUBBER BAR (7 PROPOSAL SLIDES)                         -->
+    <!-- ===================================================================== -->
+    <footer class="fixed bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 pointer-events-none no-print">
+        <!-- Prev Button -->
+        <button onclick="prevSlide()" class="glass-dock rounded-2xl px-4 py-2.5 text-xs font-bold pointer-events-auto hover:scale-105 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span class="hidden sm:inline">Previous</span>
+        </button>
+
+        <!-- 7-Slide Interactive Scrubber Dock -->
+        <div class="glass-dock rounded-2xl p-1.5 flex items-center gap-1 overflow-x-auto max-w-full pointer-events-auto">
+            <button onclick="goToSlide(0)" id="slideNav-0" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white whitespace-nowrap transition">
+                1. Proposal Cover
+            </button>
+            <button onclick="goToSlide(1)" id="slideNav-1" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                2. Full Outfit Evolution
+            </button>
+            <button onclick="goToSlide(2)" id="slideNav-2" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                3. Female Shirt Details
+            </button>
+            <button onclick="goToSlide(3)" id="slideNav-3" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                4. Male Shirt Details
+            </button>
+            <button onclick="goToSlide(4)" id="slideNav-4" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                5. 4-Colorway Matrix
+            </button>
+            <button onclick="goToSlide(5)" id="slideNav-5" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                6. Official School Seal
+            </button>
+            <button onclick="goToSlide(6)" id="slideNav-6" class="slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition">
+                7. 3D GLB Cloth & Sign-Off
+            </button>
+        </div>
+
+        <!-- Next Button -->
+        <button onclick="nextSlide()" class="glass-dock rounded-2xl px-4 py-2.5 text-xs font-bold bg-[#164226] text-white pointer-events-auto hover:scale-105 transition flex items-center gap-1.5">
+            <span class="hidden sm:inline">Next Slide</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </footer>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: OFFICIAL SCHOOL SEAL HIGH-RES EMBROIDERY INSPECTOR           -->
+    <!-- ===================================================================== -->
+    <div id="sealModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 no-print">
+        <div class="glass-dock rounded-3xl max-w-md w-full p-6 text-center relative">
+            <button onclick="closeSealInspector()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/15 hover:bg-black/30 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <span class="px-2.5 py-0.5 rounded-full bg-[#164226] text-white text-[10px] font-bold uppercase tracking-widest">
+                Official Embroidered Patch Spec
+            </span>
+            <h3 class="font-serif text-xl font-bold mt-2">Magtanggol Integrated School Seal</h3>
+            <p class="text-xs opacity-75">Science City of Muñoz • Founding Year 2012</p>
+
+            <div class="my-5 flex justify-center">
+                <div class="w-56 h-56 rounded-full p-3 shadow-2xl border-4 border-[#164226]" style="background:#b5c7b3;">
+                    <canvas id="largeSealModalCanvas" width="400" height="400" class="w-full h-full rounded-full"></canvas>
+                </div>
+            </div>
+
+            <div class="text-left text-xs space-y-1.5 bg-emerald-950/10 dark:bg-white/5 p-3.5 rounded-2xl">
+                <div><strong>• Diameter:</strong> 6.5 cm circular high-density embroidered crest with merrowed forest green border.</div>
+                <div><strong>• Heraldry Elements:</strong> Lime-green outer ring with two stars, golden-orange sunburst rays, flaming torch, open book, laurel wreath, and "2012".</div>
+                <div class="pt-1">
+                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#164226] text-white font-semibold cursor-pointer hover:bg-[#1e5632] transition">
+                        <i class="fa-solid fa-upload"></i> Upload Custom Logo Image
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadCustomLogo(event)">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: PRINTABLE EXECUTIVE PROPOSAL & SIGN-OFF SHEET                -->
+    <!-- ===================================================================== -->
+    <div id="printModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white text-slate-900 rounded-3xl max-w-3xl w-full p-8 shadow-2xl my-auto">
+            <div class="flex justify-between items-center mb-4 no-print">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-900">Committee Sign-Off & Specification Sheet</span>
+                <div class="flex gap-2">
+                    <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-[#164226] text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-print"></i> Print Proposal
+                    </button>
+                    <button onclick="closePrintModal()" class="px-3 py-2 rounded-xl bg-slate-200 text-slate-800 text-xs font-bold">
+                        Close
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 border-b-2 border-[#164226] pb-4">
+                <canvas id="printSealCanvas" width="100" height="100" class="w-16 h-16 rounded-full border border-emerald-900"></canvas>
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-emerald-950">MAGTANGGOL INTEGRATED SCHOOL</h2>
+                    <p class="text-sm font-semibold text-emerald-800">Science City of Muñoz, Nueva Ecija • Senior High School Department</p>
+                    <p class="text-xs uppercase tracking-widest text-slate-500 font-bold mt-0.5">Proposed Senior High School Uniform Technical Specification</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 my-5 text-xs">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+                    <h4 class="font-bold text-sm text-emerald-950 uppercase mb-2">Selected Uniform Configuration</h4>
+                    <p><strong>Colorway Option:</strong> <span id="printSpecColor">Option 1: Sage & Deep Green (#b5c7b3 / #164226)</span></p>
+                    <p><strong>Left Chest Insignia:</strong> <span id="printSpecEmblem">Official Circular Magtanggol Integrated School Seal</span></p>
+                    <p><strong>Recommended Fabric:</strong> 165 GSM Breathable CVC Cotton-Polyester Twill</p>
+                    <p><strong>Lower Garment:</strong> Tailored Charcoal / Black Slacks & Formal Black Shoes</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+                    <h4 class="font-bold text-sm text-emerald-950 uppercase mb-2">Tailoring & Construction Details</h4>
+                    <p><strong>Female Blouse:</strong> Contoured waist with front/back princess seams, open V-neck lapel collar with dark inner neckband & edge piping, 5-button double-piped placket, piped short sleeves, curved hem.</p>
+                    <p><strong>Male Shirt:</strong> Relaxed straight-cut polo-barong torso, pointed collar with dark inner stand & edge trim, 5-button double-piped center placket, piped short sleeves, straight hem with side vents.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 mt-4 border-t border-slate-200 text-center text-xs">
+                <div class="border-t border-slate-400 pt-1.5 font-bold">School Principal</div>
+                <div class="border-t border-slate-400 pt-1.5 font-bold">SHS Coordinator</div>
+                <div class="border-t border-slate-400 pt-1.5 font-bold">SPTA President</div>
+                <div class="border-t border-slate-400 pt-1.5 font-bold">SSLG President</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- CORE APPLICATION SCRIPT: ENGINE 1 (STUDIO CLOTH) + ENGINE 2 (3D GLB)  -->
+    <!-- ===================================================================== -->
+    <script>
+        /***********************************************************************
+         * 1. COLORWAY PRESETS, SLIDE NARRATIVES & GLOBAL STATE
+         ***********************************************************************/
+        const COLOR_PRESETS = {
+            sage: {
+                id: 'sage',
+                badge: 'Option 1',
+                title: 'OPTION 1: SAGE & DEEP GREEN',
+                body: '#b5c7b3',
+                trim: '#164226',
+                collarSolid: false
+            },
+            blue: {
+                id: 'blue',
+                badge: 'Option 2',
+                title: 'OPTION 2: STEEL BLUE & NAVY',
+                body: '#9ab0c7',
+                trim: '#16264c',
+                collarSolid: false
+            },
+            cream: {
+                id: 'cream',
+                badge: 'Option 3',
+                title: 'OPTION 3: WARM CREAM & BURGUNDY',
+                body: '#dfd1b4',
+                trim: '#631c24',
+                collarSolid: true // Matches generated Option 3 solid burgundy collar flaps
+            },
+            sand: {
+                id: 'sand',
+                badge: 'Option 4',
+                title: 'OPTION 4: LIGHT SAND & FOREST GREEN',
+                body: '#cfc4b4',
+                trim: '#1b4328',
+                collarSolid: true // Matches generated Option 4 solid forest green collar flaps
+            },
+            white: {
+                id: 'white',
+                badge: 'Baseline',
+                title: 'BASELINE: CLASSIC WHITE & GREEN',
+                body: '#f6f7f5',
+                trim: '#1b5e32',
+                collarSolid: false
+            }
+        };
+
+        const SLIDES = [
+            {
+                step: 'Slide 1 of 7',
+                tag: 'Executive Overview',
+                headline: 'Proposed Senior High School Uniform',
+                desc: 'Side-by-side tailored ghost-mannequin cloth showcase for Female and Male Senior High School learners. Features breathable Light Sage Green CVC cotton-twill with Deep Forest Green piping and the official school seal.',
+                displayMode: 'both',
+                engine: 'studio',
+                angle: 'angled'
+            },
+            {
+                step: 'Slide 2 of 7',
+                tag: 'Full Outfit Evolution',
+                headline: 'Full Uniform Pairing with Charcoal/Black Slacks',
+                desc: 'Demonstrates how the Light Sage Green torso uniform pairs with standard formal black slacks and leather shoes—maintaining dignity while resisting heat and stains better than plain white.',
+                displayMode: 'fullOutfit',
+                engine: 'studio',
+                angle: 'front'
+            },
+            {
+                step: 'Slide 3 of 7',
+                tag: 'Female Tailoring Spec',
+                headline: 'Female Shirt Construction & 5 Detail Callouts',
+                desc: 'Contoured hourglass silhouette shaped by curved front and back princess seams, an open V-neck two-tone collar, twin-piped 5-button placket, piped sleeve cuffs, and a curved twin-needle hem.',
+                displayMode: 'female',
+                engine: 'studio',
+                angle: 'angled'
+            },
+            {
+                step: 'Slide 4 of 7',
+                tag: 'Male Tailoring Spec',
+                headline: 'Male Shirt Construction & 5 Detail Callouts',
+                desc: 'Relaxed straight-cut polo-barong torso engineered for airflow and comfort, featuring a pointed turndown collar with dark inner stand, twin-piped 5-button placket, and tailored lower side vents/slits.',
+                displayMode: 'male',
+                engine: 'studio',
+                angle: 'angled'
+            },
+            {
+                step: 'Slide 5 of 7',
+                tag: 'Shade Recommendations',
+                headline: '4-Colorway Proposal Comparison Matrix',
+                desc: 'Compare all four recommended color combinations side-by-side: Option 1 (Sage & Deep Green), Option 2 (Steel Blue & Navy), Option 3 (Warm Cream & Burgundy), and Option 4 (Light Sand & Forest Green). Click any pair on screen to select it.',
+                displayMode: 'grid4',
+                engine: 'studio',
+                angle: 'angled'
+            },
+            {
+                step: 'Slide 6 of 7',
+                tag: 'Official Insignia',
+                headline: 'Official Magtanggol Integrated School Seal Integration',
+                desc: 'Replaces the plain "MIS SHS" text with the vibrant circular school crest ("MAGTANGGOL INTEGRATED SCHOOL • SCIENCE CITY OF MUÑOZ • 2012") rendered as a 6.5 cm embroidered left-chest badge.',
+                displayMode: 'both',
+                engine: 'studio',
+                angle: 'front',
+                forceEmblem: 'seal',
+                showCenterSealHero: true
+            },
+            {
+                step: 'Slide 7 of 7',
+                tag: '3D Baked Cloth Mesh',
+                headline: 'Interactive 360° 3D GLB Cloth Configurator',
+                desc: 'Inspect the uniform baked directly onto a real Blender-sculpted 3D cloth mesh (shirt_baked.glb) with full 360° OrbitControls, or click "Proposal Sheet" above to print the committee sign-off form.',
+                displayMode: 'both',
+                engine: 'glb',
+                angle: 'front'
+            }
+        ];
+
+        const state = {
+            currentSlide: 0,
+            engine: 'studio',        // 'studio' (Engine 1) or 'glb' (Engine 2)
+            displayMode: 'both',     // 'both', 'female', 'male', 'fullOutfit', 'grid4'
+            presetKey: 'sage',
+            bodyColor: '#b5c7b3',
+            trimColor: '#164226',
+            collarSolid: false,
+            emblemType: 'seal',      // 'seal' or 'text'
+            studioAngle: 'angled',   // 'angled', 'front', 'side', 'back'
+            activeCallout: null,     // 0..4 or null
+            loupeEnabled: false,
+            autoTurntable: false,
+            autoPlayTimer: null,
+            darkTheme: false,
+            // Interactive 3D tilt/turntable state for Engine 1
+            tiltY: 0,                // Horizontal rotation offset (-0.65 to +0.65 rad)
+            tiltX: 0,                // Vertical tilt offset (-0.35 to +0.35 rad)
+            targetTiltY: 0,
+            targetTiltX: 0,
+            mouseX: 0,
+            mouseY: 0,
+            isPointerDown: false,
+            customLogoImage: null
+        };
+
+        /***********************************************************************
+         * 2. COLOR & PROCEDURAL TEXTURE HELPERS
+         ***********************************************************************/
+        function hexToRgb(hex) {
+            const clean = hex.replace('#', '');
+            const num = parseInt(clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean, 16);
+            return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+        }
+
+        function shadeHex(hex, percent) {
+            const { r, g, b } = hexToRgb(hex);
+            const amt = Math.round(2.55 * percent);
+            const nr = Math.max(0, Math.min(255, r + amt));
+            const ng = Math.max(0, Math.min(255, g + amt));
+            const nb = Math.max(0, Math.min(255, b + amt));
+            return `rgb(${nr},${ng},${nb})`;
+        }
+
+        function rgbaHex(hex, alpha) {
+            const { r, g, b } = hexToRgb(hex);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+
+        // High-DPI Diagonal CVC Cotton-Twill Micro-Weave Pattern
+        let twillPatternCanvas = null;
+        function getTwillWeavePattern(ctx) {
+            if (!twillPatternCanvas) {
+                twillPatternCanvas = document.createElement('canvas');
+                twillPatternCanvas.width = 24;
+                twillPatternCanvas.height = 24;
+                const pCtx = twillPatternCanvas.getContext('2d');
+                pCtx.clearRect(0, 0, 24, 24);
+                // Diagonal twill ridges + subtle yarn slub
+                pCtx.strokeStyle = 'rgba(0, 0, 0, 0.045)';
+                pCtx.lineWidth = 1;
+                for (let i = -24; i < 48; i += 3) {
+                    pCtx.beginPath();
+                    pCtx.moveTo(i, 0);
+                    pCtx.lineTo(i + 24, 24);
+                    pCtx.stroke();
+                }
+                pCtx.strokeStyle = 'rgba(255, 255, 255, 0.055)';
+                for (let i = -24; i < 48; i += 3) {
+                    pCtx.beginPath();
+                    pCtx.moveTo(i + 1, 0);
+                    pCtx.lineTo(i + 25, 24);
+                    pCtx.stroke();
+                }
+            }
+            return ctx.createPattern(twillPatternCanvas, 'repeat');
+        }
+
+        /***********************************************************************
+         * 3. OFFICIAL MAGTANGGOL INTEGRATED SCHOOL SEAL EMBROIDERY RENDERER
+         * Offscreen cached high-DPI badge with realistic stitch texture
+         ***********************************************************************/
+        const sealCacheCanvas = document.createElement('canvas');
+        sealCacheCanvas.width = 512;
+        sealCacheCanvas.height = 512;
+
+        function rebuildOfficialSealCache() {
+            const ctx = sealCacheCanvas.getContext('2d');
+            const size = 512;
+            const cx = size / 2;
+            const cy = size / 2;
+            const r = size * 0.465;
+
+            ctx.clearRect(0, 0, size, size);
+            ctx.save();
+
+            if (state.customLogoImage) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(state.customLogoImage, cx - r, cy - r, r * 2, r * 2);
+                ctx.restore();
+                return;
+            }
+
+            // 1. Merrowed Embroidered Outer Border Ring
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#7ce636'; // Signature vibrant lime-green outer ring from MIS 3.jpg
+            ctx.fill();
+            ctx.lineWidth = size * 0.022;
+            ctx.strokeStyle = '#14381c';
+            ctx.stroke();
+
+            // 2. Inner Golden-Orange Sunburst Disc
+            const innerR = r * 0.73;
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+            const sunGrad = ctx.createRadialGradient(cx, cy, innerR * 0.08, cx, cy, innerR);
+            sunGrad.addColorStop(0, '#fff380');
+            sunGrad.addColorStop(0.55, '#fbc02d');
+            sunGrad.addColorStop(1, '#ef6c00');
+            ctx.fillStyle = sunGrad;
+            ctx.fill();
+            ctx.lineWidth = size * 0.015;
+            ctx.strokeStyle = '#14381c';
+            ctx.stroke();
+
+            // 3. Radiant Sunburst Rays
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerR - 2, 0, Math.PI * 2);
+            ctx.clip();
+            const rays = 18;
+            for (let i = 0; i < rays; i++) {
+                const a = (i * Math.PI * 2) / rays;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + size * 0.04);
+                ctx.arc(cx, cy + size * 0.04, innerR * 1.35, a, a + Math.PI / rays);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(255, 241, 118, 0.65)' : 'rgba(230, 81, 0, 0.32)';
+                ctx.fill();
+            }
+
+            // 4. Flaming Torch at Center
+            ctx.fillStyle = '#9c4716';
+            ctx.strokeStyle = '#3e1b05';
+            ctx.lineWidth = size * 0.01;
+            ctx.beginPath();
+            ctx.rect(cx - size * 0.032, cy - size * 0.05, size * 0.064, size * 0.28);
+            ctx.fill();
+            ctx.stroke();
+
+            // Torch Bowl
+            ctx.beginPath();
+            ctx.moveTo(cx - size * 0.095, cy - size * 0.055);
+            ctx.lineTo(cx + size * 0.095, cy - size * 0.055);
+            ctx.lineTo(cx + size * 0.055, cy - size * 0.008);
+            ctx.lineTo(cx - size * 0.055, cy - size * 0.008);
+            ctx.closePath();
+            ctx.fillStyle = '#b85a1e';
+            ctx.fill();
+            ctx.stroke();
+
+            // Torch Flame
+            ctx.beginPath();
+            ctx.moveTo(cx - size * 0.055, cy - size * 0.06);
+            ctx.quadraticCurveTo(cx - size * 0.085, cy - size * 0.18, cx - size * 0.005, cy - size * 0.275);
+            ctx.quadraticCurveTo(cx + size * 0.03, cy - size * 0.19, cx + size * 0.045, cy - size * 0.21);
+            ctx.quadraticCurveTo(cx + size * 0.095, cy - size * 0.12, cx + size * 0.05, cy - size * 0.06);
+            ctx.closePath();
+            const fGrad = ctx.createLinearGradient(cx, cy - size * 0.275, cx, cy - size * 0.06);
+            fGrad.addColorStop(0, '#d50000');
+            fGrad.addColorStop(0.55, '#ff6d00');
+            fGrad.addColorStop(1, '#ffee58');
+            ctx.fillStyle = fGrad;
+            ctx.fill();
+
+            // 5. Green Laurel Wreaths
+            [-1, 1].forEach(dir => {
+                ctx.save();
+                ctx.fillStyle = '#157a1e';
+                ctx.strokeStyle = '#09380d';
+                ctx.lineWidth = size * 0.006;
+                for (let j = 0; j < 6; j++) {
+                    const t = j / 5;
+                    const ang = 0.35 + t * 0.95;
+                    const lx = cx + dir * Math.sin(ang) * (innerR * 0.72);
+                    const ly = cy + Math.cos(ang) * (innerR * 0.62);
+                    ctx.save();
+                    ctx.translate(lx, ly);
+                    ctx.rotate(dir * (-0.5 + t * 1.1));
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, size * 0.042, size * 0.019, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                ctx.restore();
+            });
+
+            // 6. Open Book of Knowledge
+            const bw = size * 0.33;
+            const bh = size * 0.155;
+            const by = cy + size * 0.048;
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#111111';
+            ctx.lineWidth = size * 0.012;
+
+            [-1, 1].forEach(side => {
+                ctx.beginPath();
+                ctx.moveTo(cx, by - bh * 0.35);
+                ctx.quadraticCurveTo(cx + side * bw * 0.25, by - bh * 0.5, cx + side * bw * 0.5, by - bh * 0.3);
+                ctx.lineTo(cx + side * bw * 0.54, by + bh * 0.45);
+                ctx.quadraticCurveTo(cx + side * bw * 0.25, by + bh * 0.3, cx, by + bh * 0.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            // Book Page Lines
+            ctx.strokeStyle = '#555555';
+            ctx.lineWidth = size * 0.005;
+            for (let l = -2; l <= 2; l++) {
+                const ly = by + l * (size * 0.019);
+                ctx.beginPath();
+                ctx.moveTo(cx - bw * 0.41, ly); ctx.lineTo(cx - bw * 0.1, ly);
+                ctx.moveTo(cx + bw * 0.1, ly); ctx.lineTo(cx + bw * 0.41, ly);
+                ctx.stroke();
+            }
+
+            // 7. Founding Year "20 12"
+            ctx.fillStyle = '#000000';
+            ctx.font = `900 ${Math.round(size * 0.05)}px Cinzel, serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('20', cx - size * 0.082, cy + size * 0.17);
+            ctx.fillText('12', cx + size * 0.082, cy + size * 0.17);
+            ctx.restore();
+
+            // 8. Circular Arched Typography
+            const tr = (r + innerR) / 2;
+            ctx.fillStyle = '#071709';
+            ctx.font = `900 ${Math.round(size * 0.064)}px Cinzel, serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const topStr = '★ MAGTANGGOL INTEGRATED SCHOOL ★';
+            const sTop = -Math.PI * 0.89;
+            const eTop = -Math.PI * 0.11;
+            for (let i = 0; i < topStr.length; i++) {
+                const th = sTop + (i / (topStr.length - 1)) * (eTop - sTop);
+                ctx.save();
+                ctx.translate(cx + Math.cos(th) * tr, cy + Math.sin(th) * tr);
+                ctx.rotate(th + Math.PI / 2);
+                ctx.fillText(topStr[i], 0, 0);
+                ctx.restore();
+            }
+
+            ctx.font = `800 ${Math.round(size * 0.058)}px Inter, sans-serif`;
+            const botStr = 'SCIENCE CITY OF MUÑOZ';
+            const sBot = Math.PI * 0.80;
+            const eBot = Math.PI * 0.20;
+            for (let i = 0; i < botStr.length; i++) {
+                const th = sBot + (i / (botStr.length - 1)) * (eBot - sBot);
+                ctx.save();
+                ctx.translate(cx + Math.cos(th) * tr, cy + Math.sin(th) * tr);
+                ctx.rotate(th - Math.PI / 2);
+                ctx.fillText(botStr[i], 0, 0);
+                ctx.restore();
+            }
+
+            // 9. Subtle Embroidery Thread Sheen Overlay
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.lineWidth = 1;
+            for (let y = cx - r; y < cx + r; y += 4) {
+                ctx.beginPath();
+                ctx.moveTo(cx - r, y);
+                ctx.lineTo(cx + r, y);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+
+            // Sync UI Seal Canvases
+            ['headerSealCanvas', 'largeSealModalCanvas', 'printSealCanvas'].forEach(id => {
+                const c = document.getElementById(id);
+                if (c) {
+                    const cCtx = c.getContext('2d');
+                    cCtx.clearRect(0, 0, c.width, c.height);
+                    cCtx.drawImage(sealCacheCanvas, 0, 0, c.width, c.height);
+                }
+            });
+        }
+
+        /***********************************************************************
+         * 4. ENGINE 1: PHOTOREALISTIC STUDIO CLOTH & DRAPE COMPOSITOR
+         * Renders bespoke tailored Female & Male Ghost-Mannequin Cloth Garments
+         * with natural drapery folds, ambient occlusion, twill weave & parallax
+         ***********************************************************************/
+        function drawPhotorealisticGarment(ctx, opts) {
+            const {
+                cx, cy, scale,
+                isFemale,
+                bodyHex, trimHex, collarSolid,
+                emblemType,
+                poseAngle = 0.22, // positive = angled right (like Female mockup), negative = angled left (like Male mockup)
+                tiltX = 0,
+                withSlacks = false,
+                label = ''
+            } = opts;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(scale, scale);
+
+            // Effective 3D horizontal turn factor (-1 to +1) combining preset pose + interactive mouse drag
+            const turn = Math.max(-0.85, Math.min(0.85, poseAngle + state.tiltY));
+            const vTilt = Math.max(-0.35, Math.min(0.35, tiltX + state.tiltX));
+            const isBackView = state.studioAngle === 'back';
+            const isSideView = state.studioAngle === 'side';
+
+            // Lighting shift based on 3D turn
+            const lightShiftX = -turn * 45;
+
+            // =================================================================
+            // A. FLOATING STUDIO DROP SHADOW (OR FULL SLACKS + SHOES)
+            // =================================================================
+            if (withSlacks) {
+                drawTailoredSlacksAndShoes(ctx, isFemale, turn, vTilt);
+            } else {
+                const shadowY = isFemale ? 205 : 225;
+                const shadowW = isFemale ? 115 : 132;
+                const sGrad = ctx.createRadialGradient(turn * 10, shadowY, 8, turn * 10, shadowY, shadowW);
+                sGrad.addColorStop(0, state.darkTheme ? 'rgba(0,0,0,0.58)' : 'rgba(15,28,19,0.28)');
+                sGrad.addColorStop(0.6, state.darkTheme ? 'rgba(0,0,0,0.22)' : 'rgba(15,28,19,0.08)');
+                sGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = sGrad;
+                ctx.beginPath();
+                ctx.ellipse(turn * 10, shadowY, shadowW, 18, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // =================================================================
+            // B. GHOST MANNEQUIN HOLLOW NECK & DARK INNER COLLAR STAND
+            // =================================================================
+            const neckY = isFemale ? -156 : -174;
+            const neckW = isFemale ? 46 : 52;
+
+            if (!isBackView) {
+                // 1. Dark Forest Green Inner Collar Band (Top Arch)
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(-neckW, neckY + 4);
+                ctx.bezierCurveTo(-neckW * 0.85, neckY - 26 - vTilt * 12, neckW * 0.85, neckY - 26 - vTilt * 12, neckW, neckY + 4);
+                ctx.lineTo(neckW * 0.9, neckY + 28);
+                ctx.bezierCurveTo(neckW * 0.5, neckY + 12, -neckW * 0.5, neckY + 12, -neckW * 0.9, neckY + 28);
+                ctx.closePath();
+                const bandGrad = ctx.createLinearGradient(-neckW, neckY - 20, neckW, neckY + 20);
+                bandGrad.addColorStop(0, shadeHex(trimHex, -18));
+                bandGrad.addColorStop(0.5, trimHex);
+                bandGrad.addColorStop(1, shadeHex(trimHex, -22));
+                ctx.fillStyle = bandGrad;
+                ctx.fill();
+
+                // 2. Ghost Mannequin Inner Back Wall (3D Hollow Interior Depth)
+                ctx.beginPath();
+                ctx.moveTo(-neckW * 0.86, neckY + 10);
+                ctx.quadraticCurveTo(0, neckY - 2, neckW * 0.86, neckY + 10);
+                ctx.lineTo(turn * 10, neckY + (isFemale ? 76 : 68));
+                ctx.closePath();
+                const innerWallGrad = ctx.createLinearGradient(0, neckY, 0, neckY + 78);
+                innerWallGrad.addColorStop(0, shadeHex(bodyHex, -42));
+                innerWallGrad.addColorStop(0.55, shadeHex(bodyHex, -28));
+                innerWallGrad.addColorStop(1, shadeHex(bodyHex, -52));
+                ctx.fillStyle = innerWallGrad;
+                ctx.fill();
+
+                // 3. Left & Right Inner Collar Lapel Facets (Dark Trim Interior Flaps)
+                [-1, 1].forEach(side => {
+                    ctx.beginPath();
+                    ctx.moveTo(side * neckW * 0.82, neckY + 4);
+                    ctx.lineTo(side * (neckW * 0.55) + turn * 8, neckY + 48);
+                    ctx.lineTo(turn * 10, neckY + (isFemale ? 74 : 65));
+                    ctx.lineTo(side * neckW * 0.42, neckY + 16);
+                    ctx.closePath();
+                    ctx.fillStyle = side === -1 ? shadeHex(trimHex, -6) : shadeHex(trimHex, -14);
+                    ctx.fill();
+                });
+                ctx.restore();
+            }
+
+            // =================================================================
+            // C. BACK SLEEVE LAYER (FOR 3D PARALLAX DEPTH)
+            // =================================================================
+            const shoulderW = isFemale ? 104 : 124;
+            const shoulderY = isFemale ? -128 : -142;
+            const waistW = isFemale ? 76 : 114;
+            const hemW = isFemale ? 98 : 115;
+            const hemY = isFemale ? 148 : 168;
+
+            // Draw both sleeves with realistic shoulder drape & horizontal contrast cuff piping
+            [-1, 1].forEach(side => {
+                drawTailoredSleeve(ctx, {
+                    side,
+                    isFemale,
+                    shoulderW,
+                    shoulderY,
+                    bodyHex,
+                    trimHex,
+                    turn,
+                    vTilt
+                });
+            });
+
+            // =================================================================
+            // D. MAIN SCULPTED TORSO CLOTH BODY & NATURAL DRAPERY FOLDS
+            // =================================================================
+            ctx.save();
+            defineTorsoClothOutline(ctx, {
+                isFemale,
+                neckW,
+                neckY,
+                shoulderW,
+                shoulderY,
+                waistW,
+                hemW,
+                hemY,
+                turn,
+                isBackView,
+                isSideView
+            });
+
+            // 1. Multi-Stop 3D Studio Cylindrical Cloth Shading
+            const torsoGrad = ctx.createLinearGradient(-hemW + lightShiftX, 0, hemW + lightShiftX, 0);
+            torsoGrad.addColorStop(0, shadeHex(bodyHex, -16));
+            torsoGrad.addColorStop(0.22, shadeHex(bodyHex, -3));
+            torsoGrad.addColorStop(0.48, shadeHex(bodyHex, 7));  // Key light soft highlight on chest
+            torsoGrad.addColorStop(0.76, bodyHex);
+            torsoGrad.addColorStop(1, shadeHex(bodyHex, -19));
+            ctx.fillStyle = torsoGrad;
+            ctx.fill();
+
+            // Clip all internal cloth folds, seams, weave, and placket to the torso silhouette
+            ctx.clip();
+
+            // 2. Soft Natural Cloth Drapery Folds & Tension Creases (Realistic Apparel Shader)
+            drawNaturalClothDraperyFolds(ctx, {
+                isFemale,
+                neckY,
+                shoulderW,
+                waistW,
+                hemW,
+                hemY,
+                bodyHex,
+                turn
+            });
+
+            // 3. CVC Cotton-Twill Micro-Weave Texture Overlay
+            const twillPat = getTwillWeavePattern(ctx);
+            if (twillPat) {
+                ctx.fillStyle = twillPat;
+                ctx.fillRect(-220, -240, 440, 460);
+            }
+
+            // 4. Female Contoured Princess Seams OR Male Back Yoke & Side Slit Vents
+            if (isFemale) {
+                drawFemalePrincessSeams(ctx, shoulderW, shoulderY, waistW, hemW, hemY, bodyHex, turn);
+            } else {
+                drawMaleTailoringLines(ctx, shoulderW, shoulderY, hemW, hemY, bodyHex, turn, isBackView);
+            }
+
+            // 5. Center-Front Double-Piped Button Placket & 5 4-Hole Buttons (Front & 3/4 Views)
+            if (!isBackView) {
+                const placketX = turn * (isFemale ? 26 : 30);
+                const placketTop = neckY + (isFemale ? 72 : 62);
+                const placketBot = hemY + 10;
+                const placketW = isFemale ? 18 : 20;
+
+                // Subtle Placket Drop Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.08)';
+                ctx.fillRect(placketX - placketW / 2 - 3, placketTop, placketW + 6, placketBot - placketTop);
+
+                // Placket Cloth Strip
+                ctx.fillStyle = shadeHex(bodyHex, 2);
+                ctx.fillRect(placketX - placketW / 2, placketTop, placketW, placketBot - placketTop);
+
+                // Left & Right Parallel Dark Accent Piping Strips (Signature Uniform Detail!)
+                const pipeW = 3.2;
+                ctx.fillStyle = trimHex;
+                ctx.fillRect(placketX - placketW / 2 - pipeW * 0.5, placketTop - 4, pipeW, placketBot - placketTop + 6);
+                ctx.fillRect(placketX + placketW / 2 - pipeW * 0.5, placketTop - 4, pipeW, placketBot - placketTop + 6);
+
+                // 5 Color-Matched 4-Hole Buttons with Thread Cross-Stitch
+                const numButtons = 5;
+                const startBtnY = placketTop + 20;
+                const endBtnY = placketBot - 38;
+                for (let b = 0; b < numButtons; b++) {
+                    const by = startBtnY + (b / (numButtons - 1)) * (endBtnY - startBtnY);
+                    drawRealisticButton(ctx, placketX, by, isFemale ? 4.6 : 5.0, trimHex);
+                }
+            }
+
+            // 6. Twin-Needle Bottom Hem Topstitching
+            ctx.strokeStyle = shadeHex(bodyHex, -24);
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([3.5, 2.5]);
+            ctx.beginPath();
+            if (isFemale) {
+                ctx.moveTo(-hemW - 10, hemY - 12);
+                ctx.quadraticCurveTo(turn * 15, hemY + 6, hemW + 10, hemY - 12);
+                ctx.moveTo(-hemW - 10, hemY - 8);
+                ctx.quadraticCurveTo(turn * 15, hemY + 10, hemW + 10, hemY - 8);
+            } else {
+                ctx.moveTo(-hemW - 10, hemY - 11);
+                ctx.lineTo(hemW + 10, hemY - 11);
+                ctx.moveTo(-hemW - 10, hemY - 7);
+                ctx.lineTo(hemW + 10, hemY - 7);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 7. LEFT CHEST EMBLEM (Official Circular School Seal OR "MIS SHS" Embroidery)
+            if (!isBackView) {
+                const chestX = turn * 24 + (isFemale ? 46 : 54);
+                const chestY = isFemale ? -58 : -66;
+                drawLeftChestInsignia(ctx, chestX, chestY, isFemale, emblemType, trimHex, turn);
+            }
+
+            ctx.restore(); // End Torso Clip
+
+            // Subtle crisp outer anti-aliased contour stroke on torso
+            ctx.save();
+            defineTorsoClothOutline(ctx, {
+                isFemale, neckW, neckY, shoulderW, shoulderY, waistW, hemW, hemY, turn, isBackView, isSideView
+            });
+            ctx.strokeStyle = shadeHex(bodyHex, -22);
+            ctx.lineWidth = 1.1;
+            ctx.stroke();
+            ctx.restore();
+
+            // =================================================================
+            // E. POINTED 3D COLLAR FLAPS WITH CONTRAST BORDER PIPING
+            // =================================================================
+            drawTailoredCollarFlaps(ctx, {
+                isFemale,
+                neckW,
+                neckY,
+                bodyHex,
+                trimHex,
+                collarSolid,
+                turn,
+                vTilt,
+                isBackView
+            });
+
+            // =================================================================
+            // F. CAPTION LABEL UNDER GARMENT
+            // =================================================================
+            if (label) {
+                ctx.save();
+                ctx.font = '700 15px Inter, sans-serif';
+                ctx.fillStyle = state.darkTheme ? '#e2ece4' : '#13331e';
+                ctx.textAlign = 'center';
+                ctx.letterSpacing = '1.5px';
+                ctx.fillText(label, turn * 8, withSlacks ? 368 : 242);
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        // Define the exact tailored Bezier silhouette for Female (hourglass princess cut) & Male (relaxed polo-barong cut)
+        function defineTorsoClothOutline(ctx, p) {
+            const { isFemale, neckW, neckY, shoulderW, shoulderY, waistW, hemW, hemY, turn, isBackView } = p;
+            const asymL = -turn * 14;
+            const asymR = -turn * 14;
+            const vNeckDepth = isBackView ? 6 : (isFemale ? 74 : 64);
+            const vNeckCenterX = turn * (isFemale ? 26 : 30);
+
+            ctx.beginPath();
+            // Start at left neck-shoulder junction
+            ctx.moveTo(-neckW + asymL * 0.3, neckY + 4);
+
+            // V-Neck Dip (or high back neck curve)
+            if (isBackView) {
+                ctx.quadraticCurveTo(0, neckY + 12, neckW + asymR * 0.3, neckY + 4);
+            } else {
+                // Left V-neck lapel edge down to top of button placket
+                ctx.quadraticCurveTo(-neckW * 0.35 + vNeckCenterX * 0.5, neckY + vNeckDepth * 0.62, vNeckCenterX - 7, neckY + vNeckDepth);
+                ctx.lineTo(vNeckCenterX + 7, neckY + vNeckDepth);
+                ctx.quadraticCurveTo(neckW * 0.35 + vNeckCenterX * 0.5, neckY + vNeckDepth * 0.62, neckW + asymR * 0.3, neckY + 4);
+            }
+
+            // Right Shoulder Slope
+            ctx.quadraticCurveTo(shoulderW * 0.55 + asymR * 0.5, neckY + 10, shoulderW + asymR, shoulderY);
+
+            // Right Armhole Scye Curve
+            const armholeBottomY = isFemale ? -48 : -52;
+            const chestW = isFemale ? 92 : 114;
+            ctx.bezierCurveTo(
+                shoulderW - 8 + asymR, shoulderY + 34,
+                chestW + 4 + asymR, armholeBottomY - 22,
+                chestW + asymR, armholeBottomY
+            );
+
+            // Right Torso Side Seam down to Hem
+            if (isFemale) {
+                // Tailored Hourglass Waist Suppression + Gentle Hip Flare
+                ctx.bezierCurveTo(
+                    chestW - 2 + asymR, -12,
+                    waistW + asymR, 18,
+                    waistW + 2 + asymR, 48
+                );
+                ctx.bezierCurveTo(
+                    waistW + 5 + asymR, 82,
+                    hemW - 2 + asymR, 118,
+                    hemW + asymR, hemY - 8
+                );
+                // Curved Female Hemline
+                ctx.quadraticCurveTo(turn * 16, hemY + 14, -hemW + asymL, hemY - 8);
+                // Left Torso Side Seam up from Hip to Waist to Bust
+                ctx.bezierCurveTo(
+                    -hemW + 2 + asymL, 118,
+                    -waistW - 5 + asymL, 82,
+                    -waistW - 2 + asymL, 48
+                );
+                ctx.bezierCurveTo(
+                    -waistW + asymL, 18,
+                    -chestW + 2 + asymL, -12,
+                    -chestW + asymL, armholeBottomY
+                );
+            } else {
+                // Male Relaxed Straight Torso with Subtle Taper & Side Vent Slits at Hem
+                const slitHeight = 24;
+                ctx.lineTo(hemW + asymR, hemY - slitHeight);
+                // Right Side Slit Vent Notch
+                ctx.lineTo(hemW - 4 + asymR, hemY);
+                // Straight Male Bottom Hem
+                ctx.quadraticCurveTo(turn * 12, hemY + 6, -hemW + 4 + asymL, hemY);
+                // Left Side Slit Vent Notch
+                ctx.lineTo(-hemW + asymL, hemY - slitHeight);
+                ctx.lineTo(-chestW + asymL, armholeBottomY);
+            }
+
+            // Left Armhole Scye Curve up to Left Shoulder
+            ctx.bezierCurveTo(
+                -chestW - 4 + asymL, armholeBottomY - 22,
+                -shoulderW + 8 + asymL, shoulderY + 34,
+                -shoulderW + asymL, shoulderY
+            );
+
+            // Left Shoulder Slope back to Left Neck
+            ctx.quadraticCurveTo(-shoulderW * 0.55 + asymL * 0.5, neckY + 10, -neckW + asymL * 0.3, neckY + 4);
+            ctx.closePath();
+        }
+
+        // Render soft, natural fabric drapery folds, bust/chest contours & waist creases
+        function drawNaturalClothDraperyFolds(ctx, p) {
+            const { isFemale, neckY, shoulderW, waistW, hemW, hemY, bodyHex, turn } = p;
+            ctx.save();
+
+            // Helper for soft organic cloth fold brush
+            function softFold(x1, y1, x2, y2, width, isHighlight) {
+                const grad = ctx.createLinearGradient(x1 - width, y1, x1 + width, y1);
+                const c = isHighlight ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.075)';
+                grad.addColorStop(0, 'rgba(0,0,0,0)');
+                grad.addColorStop(0.5, c);
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = width * 1.6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.quadraticCurveTo((x1 + x2) / 2 + turn * 8, (y1 + y2) / 2, x2, y2);
+                ctx.stroke();
+            }
+
+            if (isFemale) {
+                // Bust volume soft radial highlights
+                [-1, 1].forEach(side => {
+                    const bx = side * 42 + turn * 18;
+                    const by = -42;
+                    const bGrad = ctx.createRadialGradient(bx, by, 4, bx, by, 48);
+                    bGrad.addColorStop(0, 'rgba(255,255,255,0.18)');
+                    bGrad.addColorStop(0.65, 'rgba(255,255,255,0.04)');
+                    bGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = bGrad;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, 48, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Natural waist suppression drapery folds radiating softly toward princess seams
+                softFold(-52 + turn * 10, -18, -36 + turn * 12, 58, 14, false);
+                softFold(-44 + turn * 10, -12, -28 + turn * 12, 64, 10, true);
+                softFold(52 + turn * 10, -18, 36 + turn * 12, 58, 14, false);
+                softFold(44 + turn * 10, -12, 28 + turn * 12, 64, 10, true);
+
+                // Under-bust gentle contour shadow
+                softFold(-56 + turn * 12, -8, -18 + turn * 16, 12, 12, false);
+                softFold(56 + turn * 12, -8, 18 + turn * 16, 12, 12, false);
+            } else {
+                // Male relaxed vertical fabric drape flutes & chest fullness
+                [-1, 1].forEach(side => {
+                    const cx = side * 52 + turn * 20;
+                    const cy = -48;
+                    const cGrad = ctx.createRadialGradient(cx, cy, 8, cx, cy, 62);
+                    cGrad.addColorStop(0, 'rgba(255,255,255,0.14)');
+                    cGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = cGrad;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 62, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Vertical soft cloth drape creases from chest to lower hem
+                softFold(-64 + turn * 12, -35, -72 + turn * 8, 145, 16, false);
+                softFold(-48 + turn * 14, -20, -52 + turn * 10, 150, 14, true);
+                softFold(64 + turn * 12, -35, 72 + turn * 8, 145, 16, false);
+                softFold(48 + turn * 14, -20, 52 + turn * 10, 150, 14, true);
+                softFold(-24 + turn * 20, 10, -28 + turn * 18, 155, 12, false);
+            }
+
+            // Ambient occlusion shadow directly beneath the collar flaps
+            const collarAO = ctx.createLinearGradient(0, neckY + 18, 0, neckY + 68);
+            collarAO.addColorStop(0, 'rgba(0,0,0,0.16)');
+            collarAO.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = collarAO;
+            ctx.fillRect(-85, neckY + 18, 170, 52);
+
+            ctx.restore();
+        }
+
+        // Draw Female Contoured Princess Seams (Running smoothly from mid-armhole to hem)
+        function drawFemalePrincessSeams(ctx, shoulderW, shoulderY, waistW, hemW, hemY, bodyHex, turn) {
+            ctx.save();
+            [-1, 1].forEach(side => {
+                const startX = side * 88 - turn * 8;
+                const startY = -82;
+                const bustCtrlX = side * 42 + turn * 18;
+                const bustCtrlY = -36;
+                const waistCtrlX = side * 38 + turn * 14;
+                const waistCtrlY = 45;
+                const endX = side * 46 + turn * 10;
+                const endY = hemY + 6;
+
+                // Seam Valley Shadow
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.bezierCurveTo(bustCtrlX, bustCtrlY, waistCtrlX, waistCtrlY, endX, endY);
+                ctx.strokeStyle = shadeHex(bodyHex, -24);
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+
+                // Seam Ridge Highlight (1.5px adjacent)
+                ctx.beginPath();
+                ctx.moveTo(startX + side * 1.5, startY);
+                ctx.bezierCurveTo(bustCtrlX + side * 1.5, bustCtrlY, waistCtrlX + side * 1.5, waistCtrlY, endX + side * 1.5, endY);
+                ctx.strokeStyle = 'rgba(255,255,255,0.32)';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        // Draw Male Tailored Side Vents / Slits & Back Yoke Seam
+        function drawMaleTailoringLines(ctx, shoulderW, shoulderY, hemW, hemY, bodyHex, turn, isBackView) {
+            ctx.save();
+            const asym = -turn * 14;
+            // Side Slits / Vents at Bottom Left & Right Hip
+            [-1, 1].forEach(side => {
+                const sx = side * (hemW - 2) + asym;
+                const sy = hemY - 26;
+                ctx.fillStyle = shadeHex(bodyHex, -38);
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx - side * 7, hemY + 2);
+                ctx.lineTo(sx + side * 4, hemY + 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Bar-tack reinforcement stitch at top of side slit
+                ctx.strokeStyle = shadeHex(bodyHex, -25);
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(sx - side * 5, sy - 2, side * 5, 24);
+            });
+
+            if (isBackView) {
+                // Horizontal Back Shoulder Yoke Seam
+                ctx.beginPath();
+                ctx.moveTo(-shoulderW, shoulderY + 34);
+                ctx.quadraticCurveTo(0, shoulderY + 42, shoulderW, shoulderY + 34);
+                ctx.strokeStyle = shadeHex(bodyHex, -24);
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // Draw Tailored Short Sleeves with Natural Drape & Contrast Cuff Piping
+        function drawTailoredSleeve(ctx, p) {
+            const { side, isFemale, shoulderW, shoulderY, bodyHex, trimHex, turn, vTilt } = p;
+            ctx.save();
+
+            const asym = -turn * 14;
+            const sx = side * shoulderW + asym;
+            const sy = shoulderY;
+
+            const sleeveLen = isFemale ? 92 : 116;
+            const sleeveAngle = side * (isFemale ? 0.34 : 0.28) - turn * 0.06;
+            const outerX = sx + side * Math.sin(Math.abs(sleeveAngle)) * sleeveLen + side * (isFemale ? 26 : 30);
+            const outerY = sy + Math.cos(sleeveAngle) * sleeveLen;
+            const cuffW = isFemale ? 48 : 58;
+            const innerX = outerX - side * cuffW * 0.92;
+            const innerY = outerY + (isFemale ? 16 : 18);
+            const armpitX = side * (isFemale ? 88 : 110) + asym;
+            const armpitY = isFemale ? -46 : -50;
+
+            // 1. Dark Inner Cuff Opening Recess (3D Hollow Sleeve Depth)
+            ctx.beginPath();
+            ctx.ellipse((outerX + innerX) / 2, (outerY + innerY) / 2 + 2, cuffW * 0.5, 7, side * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = shadeHex(bodyHex, -45);
+            ctx.fill();
+
+            // 2. Main Sleeve Cloth Shape
+            ctx.beginPath();
+            ctx.moveTo(sx - side * 6, sy - 2);
+            ctx.quadraticCurveTo(
+                (sx + outerX) / 2 + side * 8,
+                (sy + outerY) / 2 - 8,
+                outerX,
+                outerY
+            );
+            ctx.quadraticCurveTo(
+                (outerX + innerX) / 2,
+                (outerY + innerY) / 2 + 4,
+                innerX,
+                innerY
+            );
+            ctx.quadraticCurveTo(
+                (innerX + armpitX) / 2,
+                (innerY + armpitY) / 2,
+                armpitX,
+                armpitY
+            );
+            ctx.closePath();
+
+            // Cylindrical Sleeve Shading
+            const sGrad = ctx.createLinearGradient(innerX, innerY, outerX, outerY);
+            if (side === -1) {
+                sGrad.addColorStop(0, shadeHex(bodyHex, -18));
+                sGrad.addColorStop(0.55, bodyHex);
+                sGrad.addColorStop(0.85, shadeHex(bodyHex, 6));
+                sGrad.addColorStop(1, shadeHex(bodyHex, -10));
+            } else {
+                sGrad.addColorStop(0, shadeHex(bodyHex, -20));
+                sGrad.addColorStop(0.45, shadeHex(bodyHex, -4));
+                sGrad.addColorStop(0.78, shadeHex(bodyHex, 5));
+                sGrad.addColorStop(1, shadeHex(bodyHex, -14));
+            }
+            ctx.fillStyle = sGrad;
+            ctx.fill();
+
+            ctx.save();
+            ctx.clip();
+
+            // Twill weave on sleeve
+            const twillPat = getTwillWeavePattern(ctx);
+            if (twillPat) {
+                ctx.fillStyle = twillPat;
+                ctx.fillRect(-260, -220, 520, 400);
+            }
+
+            // Underarm diagonal tension fold crease
+            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(armpitX, armpitY + 2);
+            ctx.lineTo((sx + outerX) * 0.5, (sy + outerY) * 0.5 + 10);
+            ctx.stroke();
+
+            // 3. Contrast Cuff Piping Stripe (14px above sleeve cuff edge)
+            const pipeOffset = 15;
+            const dx = (sx - outerX) / sleeveLen;
+            const dy = (sy - outerY) / sleeveLen;
+            const px1 = outerX + dx * pipeOffset;
+            const py1 = outerY + dy * pipeOffset;
+            const px2 = innerX + dx * pipeOffset;
+            const py2 = innerY + dy * pipeOffset;
+
+            ctx.beginPath();
+            ctx.moveTo(px1 - side * 4, py1);
+            ctx.quadraticCurveTo((px1 + px2) / 2, (py1 + py2) / 2 + 3.5, px2 + side * 4, py2);
+            ctx.strokeStyle = trimHex;
+            ctx.lineWidth = 4.2;
+            ctx.stroke();
+
+            // Twin-needle cuff stitch line
+            ctx.beginPath();
+            ctx.moveTo(px1, py1 + 5);
+            ctx.quadraticCurveTo((px1 + px2) / 2, (py1 + py2) / 2 + 8.5, px2, py2 + 5);
+            ctx.strokeStyle = shadeHex(bodyHex, -24);
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 2]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.restore();
+
+            // Sleeve Contour & Armhole Seam Line
+            ctx.strokeStyle = shadeHex(bodyHex, -22);
+            ctx.lineWidth = 1.1;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Draw Pointed 3D Collar Flaps with Dark Accent Outer Edge Trim
+        function drawTailoredCollarFlaps(ctx, p) {
+            const { isFemale, neckW, neckY, bodyHex, trimHex, collarSolid, turn, isBackView } = p;
+            ctx.save();
+
+            const wingFill = collarSolid ? trimHex : bodyHex;
+            const asym = -turn * 10;
+
+            if (isBackView) {
+                // Rear Turndown Collar Band with Contrast Bottom Edge Trim
+                ctx.beginPath();
+                ctx.moveTo(-neckW - 6, neckY + 4);
+                ctx.quadraticCurveTo(0, neckY - 12, neckW + 6, neckY + 4);
+                ctx.lineTo(neckW + 10, neckY + 28);
+                ctx.quadraticCurveTo(0, neckY + 18, -neckW - 10, neckY + 28);
+                ctx.closePath();
+                ctx.fillStyle = wingFill;
+                ctx.fill();
+                ctx.strokeStyle = trimHex;
+                ctx.lineWidth = 3.5;
+                ctx.stroke();
+                ctx.restore();
+                return;
+            }
+
+            // Left & Right Pointed Front Collar Flaps
+            [-1, 1].forEach(side => {
+                const topX = side * (neckW - 2) + asym * 0.3;
+                const topY = neckY - 4;
+                const outerTipX = side * (neckW + (isFemale ? 24 : 20)) + turn * 10;
+                const outerTipY = neckY + (isFemale ? 44 : 48);
+                const innerNotchX = side * (isFemale ? 18 : 15) + turn * 18;
+                const innerNotchY = neckY + (isFemale ? 30 : 36);
+                const neckBaseX = side * (neckW * 0.55) + turn * 12;
+                const neckBaseY = neckY + 18;
+
+                // 1. Soft Collar Drop Shadow onto Upper Chest
+                ctx.save();
+                ctx.fillStyle = 'rgba(0,0,0,0.16)';
+                ctx.beginPath();
+                ctx.moveTo(topX, topY + 5);
+                ctx.lineTo(outerTipX + side * 2, outerTipY + 6);
+                ctx.lineTo(innerNotchX, innerNotchY + 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                // 2. Collar Wing Main Fabric Shape
+                ctx.beginPath();
+                ctx.moveTo(topX, topY);
+                ctx.quadraticCurveTo(
+                    (topX + outerTipX) / 2 + side * 6,
+                    (topY + outerTipY) / 2 - 4,
+                    outerTipX,
+                    outerTipY
+                );
+                ctx.lineTo(innerNotchX, innerNotchY);
+                ctx.lineTo(neckBaseX, neckBaseY);
+                ctx.closePath();
+
+                const wGrad = ctx.createLinearGradient(topX, topY, outerTipX, outerTipY);
+                wGrad.addColorStop(0, shadeHex(wingFill, 6));
+                wGrad.addColorStop(1, shadeHex(wingFill, -8));
+                ctx.fillStyle = wGrad;
+                ctx.fill();
+
+                // 3. Signature Dark Accent Outer Edge Trim along Collar Wing Perimeter
+                ctx.beginPath();
+                ctx.moveTo(topX, topY);
+                ctx.quadraticCurveTo(
+                    (topX + outerTipX) / 2 + side * 6,
+                    (topY + outerTipY) / 2 - 4,
+                    outerTipX,
+                    outerTipY
+                );
+                ctx.lineTo(innerNotchX, innerNotchY);
+                ctx.strokeStyle = trimHex;
+                ctx.lineWidth = 3.8;
+                ctx.lineJoin = 'miter';
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
+
+        // Draw Realistic 4-Hole Button with Rim Highlight & Thread Cross-Stitch
+        function drawRealisticButton(ctx, x, y, r, hex) {
+            ctx.save();
+            // Drop shadow
+            ctx.beginPath();
+            ctx.arc(x + 0.8, y + 1.4, r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fill();
+
+            // Button Body
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            const bGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0.5, x, y, r);
+            bGrad.addColorStop(0, shadeHex(hex, 22));
+            bGrad.addColorStop(0.75, hex);
+            bGrad.addColorStop(1, shadeHex(hex, -25));
+            ctx.fillStyle = bGrad;
+            ctx.fill();
+
+            // Inner Recessed Rim
+            ctx.beginPath();
+            ctx.arc(x, y, r * 0.72, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
+
+            // 4 Thread Holes
+            ctx.fillStyle = shadeHex(hex, -35);
+            const hr = r * 0.28;
+            [[-hr, -hr], [hr, -hr], [-hr, hr], [hr, hr]].forEach(([dx, dy]) => {
+                ctx.beginPath();
+                ctx.arc(x + dx, y + dy, 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // Draw Left Chest Insignia (Official Circular School Seal OR "MIS SHS" Embroidery)
+        function drawLeftChestInsignia(ctx, x, y, isFemale, emblemType, trimHex, turn) {
+            ctx.save();
+            ctx.translate(x, y);
+            // Subtle perspective foreshortening when shirt turns
+            ctx.scale(Math.max(0.65, 1 - Math.abs(turn) * 0.22), 1);
+
+            if (emblemType === 'seal') {
+                const patchR = isFemale ? 23 : 25;
+                // Patch embroidered drop shadow
+                ctx.beginPath();
+                ctx.arc(1, 1.5, patchR + 1, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                ctx.fill();
+
+                // Draw cached high-DPI Magtanggol Integrated School Seal
+                ctx.drawImage(sealCacheCanvas, -patchR, -patchR, patchR * 2, patchR * 2);
+            } else {
+                // Crisp Embroidered "MIS SHS" Typography
+                ctx.font = `800 ${isFemale ? 13 : 14}px Inter, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'rgba(255,255,255,0.28)';
+                ctx.fillText('MIS SHS', 0, 1);
+                ctx.fillStyle = trimHex;
+                ctx.fillText('MIS SHS', 0, 0);
+            }
+            ctx.restore();
+        }
+
+        // Draw Tailored Charcoal/Black Slacks & Formal Black Leather Shoes (Full Outfit Mode)
+        function drawTailoredSlacksAndShoes(ctx, isFemale, turn, vTilt) {
+            ctx.save();
+            const topY = isFemale ? 136 : 156;
+            const hipW = isFemale ? 92 : 108;
+            const ankleY = 328;
+            const asym = -turn * 10;
+
+            // Floor Shadow under Shoes
+            const fGrad = ctx.createRadialGradient(asym, ankleY + 20, 10, asym, ankleY + 20, 115);
+            fGrad.addColorStop(0, 'rgba(0,0,0,0.38)');
+            fGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = fGrad;
+            ctx.beginPath();
+            ctx.ellipse(asym, ankleY + 20, 115, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Formal Black Leather Shoes (Left & Right)
+            [-1, 1].forEach(side => {
+                const sx = side * (isFemale ? 32 : 42) + asym;
+                ctx.beginPath();
+                ctx.ellipse(sx + side * 4, ankleY + 12, isFemale ? 22 : 26, 11, side * 0.08, 0, Math.PI * 2);
+                const shoeGrad = ctx.createRadialGradient(sx, ankleY + 6, 2, sx, ankleY + 12, 26);
+                shoeGrad.addColorStop(0, '#3a3f47');
+                shoeGrad.addColorStop(0.5, '#14171c');
+                shoeGrad.addColorStop(1, '#08090c');
+                ctx.fillStyle = shoeGrad;
+                ctx.fill();
+            });
+
+            // Tailored Charcoal/Black Slacks Silhouette
+            ctx.beginPath();
+            ctx.moveTo(-hipW + asym, topY);
+            ctx.lineTo(hipW + asym, topY);
+            // Right outer trouser leg
+            ctx.quadraticCurveTo(hipW - 4 + asym, (topY + ankleY) / 2, (isFemale ? 54 : 68) + asym, ankleY);
+            ctx.lineTo((isFemale ? 12 : 16) + asym, ankleY);
+            // Center inseam
+            ctx.lineTo(asym, topY + 58);
+            ctx.lineTo(-(isFemale ? 12 : 16) + asym, ankleY);
+            ctx.lineTo(-(isFemale ? 54 : 68) + asym, ankleY);
+            // Left outer trouser leg
+            ctx.quadraticCurveTo(-hipW + 4 + asym, (topY + ankleY) / 2, -hipW + asym, topY);
+            ctx.closePath();
+
+            const pantsGrad = ctx.createLinearGradient(-hipW, topY, hipW, topY);
+            pantsGrad.addColorStop(0, '#12151a');
+            pantsGrad.addColorStop(0.3, '#222730');
+            pantsGrad.addColorStop(0.5, '#15181e');
+            pantsGrad.addColorStop(0.75, '#242932');
+            pantsGrad.addColorStop(1, '#101317');
+            ctx.fillStyle = pantsGrad;
+            ctx.fill();
+
+            // Pressed Center Trouser Crease Highlights
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 1.5;
+            [-1, 1].forEach(side => {
+                ctx.beginPath();
+                ctx.moveTo(side * (isFemale ? 42 : 52) + asym, topY + 25);
+                ctx.lineTo(side * (isFemale ? 33 : 42) + asym, ankleY - 4);
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
+
+        /***********************************************************************
+         * 5. CIRCULAR DETAIL CALLOUT RINGS (FEMALE & MALE TECHNICAL SHEETS)
+         * Draws the 5 zoomed circular callouts + leader lines around the shirt
+         ***********************************************************************/
+        function drawTechnicalCalloutsOverlay(ctx, w, h, centerScale, isFemale) {
+            const cx = w / 2;
+            const cy = h / 2 + 12;
+            const ringR = Math.min(w, h) * 0.082;
+            if (ringR < 34) return; // Skip on ultra-small viewports
+
+            const bodyHex = state.bodyColor;
+            const trimHex = state.trimColor;
+
+            // Define the 5 circular callout positions & target anchor points on the shirt
+            const callouts = isFemale ? [
+                {
+                    id: 0,
+                    title: 'COLLAR & TRIM',
+                    sub: 'DETAIL',
+                    rx: cx - Math.min(w * 0.30, 310),
+                    ry: cy - h * 0.22,
+                    ax: cx - 35 * centerScale,
+                    ay: cy - 135 * centerScale,
+                    type: 'collar'
+                },
+                {
+                    id: 2,
+                    title: 'SLEEVE CUFF',
+                    sub: '& PIPING',
+                    rx: cx - Math.min(w * 0.32, 330),
+                    ry: cy + h * 0.02,
+                    ax: cx - 122 * centerScale,
+                    ay: cy - 35 * centerScale,
+                    type: 'cuff'
+                },
+                {
+                    id: 4,
+                    title: 'HEM &',
+                    sub: 'STITCHING',
+                    rx: cx - Math.min(w * 0.30, 310),
+                    ry: cy + h * 0.26,
+                    ax: cx - 72 * centerScale,
+                    ay: cy + 135 * centerScale,
+                    type: 'hem'
+                },
+                {
+                    id: 1,
+                    title: 'CHEST SEAL &',
+                    sub: 'EMBROIDERY',
+                    rx: cx + Math.min(w * 0.30, 310),
+                    ry: cy - h * 0.20,
+                    ax: cx + 52 * centerScale,
+                    ay: cy - 58 * centerScale,
+                    type: 'emblem'
+                },
+                {
+                    id: 3,
+                    title: 'BUTTON PLACKET',
+                    sub: '& PIPING',
+                    rx: cx + Math.min(w * 0.31, 320),
+                    ry: cy + h * 0.10,
+                    ax: cx + 6 * centerScale,
+                    ay: cy + 15 * centerScale,
+                    type: 'placket'
+                }
+            ] : [
+                {
+                    id: 0,
+                    title: 'COLLAR',
+                    sub: 'DETAIL',
+                    rx: cx - Math.min(w * 0.30, 310),
+                    ry: cy - h * 0.22,
+                    ax: cx - 42 * centerScale,
+                    ay: cy - 148 * centerScale,
+                    type: 'collar'
+                },
+                {
+                    id: 2,
+                    title: 'SLEEVE CUFF',
+                    sub: '& PIPING',
+                    rx: cx - Math.min(w * 0.32, 330),
+                    ry: cy + h * 0.02,
+                    ax: cx - 145 * centerScale,
+                    ay: cy - 32 * centerScale,
+                    type: 'cuff'
+                },
+                {
+                    id: 4,
+                    title: 'HEM &',
+                    sub: 'SIDE SLIT',
+                    rx: cx - Math.min(w * 0.30, 310),
+                    ry: cy + h * 0.26,
+                    ax: cx - 105 * centerScale,
+                    ay: cy + 152 * centerScale,
+                    type: 'slit'
+                },
+                {
+                    id: 1,
+                    title: 'CHEST SEAL &',
+                    sub: 'EMBROIDERY',
+                    rx: cx + Math.min(w * 0.30, 310),
+                    ry: cy - h * 0.20,
+                    ax: cx + 58 * centerScale,
+                    ay: cy - 66 * centerScale,
+                    type: 'emblem'
+                },
+                {
+                    id: 3,
+                    title: 'BUTTON PLACKET',
+                    sub: '& DETAIL',
+                    rx: cx + Math.min(w * 0.31, 320),
+                    ry: cy + h * 0.10,
+                    ax: cx + 6 * centerScale,
+                    ay: cy + 18 * centerScale,
+                    type: 'placket'
+                }
+            ];
+
+            callouts.forEach(c => {
+                const isSelected = state.activeCallout === c.id;
+
+                // 1. Leader Pointer Line from Circle to Garment Feature
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(c.rx, c.ry);
+                ctx.lineTo(c.ax, c.ay);
+                ctx.strokeStyle = isSelected ? '#2e7d47' : trimHex;
+                ctx.lineWidth = isSelected ? 2.5 : 1.6;
+                ctx.stroke();
+
+                // Anchor dot on garment
+                ctx.beginPath();
+                ctx.arc(c.ax, c.ay, 4, 0, Math.PI * 2);
+                ctx.fillStyle = trimHex;
+                ctx.fill();
+                ctx.restore();
+
+                // 2. Zoomed Detail Magnifier Circle
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(c.rx, c.ry, ringR, 0, Math.PI * 2);
+                ctx.fillStyle = bodyHex;
+                ctx.shadowColor = 'rgba(0,0,0,0.22)';
+                ctx.shadowBlur = 18;
+                ctx.shadowOffsetY = 6;
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.clip();
+
+                // Draw High-Zoomed Garment Feature inside Circle
+                ctx.translate(c.rx, c.ry);
+                const zScale = ringR / 48;
+                ctx.scale(zScale, zScale);
+
+                // Base cloth + twill weave
+                ctx.fillStyle = bodyHex;
+                ctx.fillRect(-60, -60, 120, 120);
+                const pat = getTwillWeavePattern(ctx);
+                if (pat) {
+                    ctx.fillStyle = pat;
+                    ctx.fillRect(-60, -60, 120, 120);
+                }
+
+                if (c.type === 'collar') {
+                    // Zoomed two-tone collar & inner neckband
+                    ctx.fillStyle = trimHex;
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 36, 16, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = shadeHex(bodyHex, -35);
+                    ctx.beginPath();
+                    ctx.moveTo(-24, -12); ctx.lineTo(0, 32); ctx.lineTo(24, -12);
+                    ctx.fill();
+                    const wf = state.collarSolid ? trimHex : bodyHex;
+                    [-1, 1].forEach(s => {
+                        ctx.beginPath();
+                        ctx.moveTo(s * 22, -22);
+                        ctx.lineTo(s * 38, 22);
+                        ctx.lineTo(s * 10, 14);
+                        ctx.closePath();
+                        ctx.fillStyle = wf;
+                        ctx.fill();
+                        ctx.strokeStyle = trimHex;
+                        ctx.lineWidth = 3.5;
+                        ctx.stroke();
+                    });
+                } else if (c.type === 'cuff') {
+                    ctx.fillStyle = state.darkTheme ? '#18261d' : '#dfe4de';
+                    ctx.fillRect(-60, 18, 120, 45);
+                    ctx.save();
+                    ctx.rotate(0.2);
+                    ctx.fillStyle = bodyHex;
+                    ctx.fillRect(-55, -45, 110, 65);
+                    ctx.fillStyle = trimHex;
+                    ctx.fillRect(-55, 4, 110, 5);
+                    ctx.restore();
+                } else if (c.type === 'hem') {
+                    ctx.fillStyle = state.darkTheme ? '#18261d' : '#dfe4de';
+                    ctx.fillRect(-60, 16, 120, 45);
+                    ctx.fillStyle = bodyHex;
+                    ctx.beginPath();
+                    ctx.moveTo(-60, -60); ctx.lineTo(60, -60);
+                    ctx.lineTo(60, 24);
+                    ctx.quadraticCurveTo(0, 14, -60, 6);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = shadeHex(bodyHex, -25);
+                    ctx.setLineDash([3, 2]);
+                    ctx.beginPath();
+                    ctx.moveTo(-60, -2); ctx.quadraticCurveTo(0, 6, 60, 16);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                } else if (c.type === 'slit') {
+                    ctx.fillStyle = state.darkTheme ? '#18261d' : '#dfe4de';
+                    ctx.fillRect(-60, 22, 120, 45);
+                    ctx.fillStyle = bodyHex;
+                    ctx.fillRect(-45, -55, 90, 77);
+                    ctx.fillStyle = state.darkTheme ? '#18261d' : '#cfd6ce';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -14); ctx.lineTo(-8, 24); ctx.lineTo(8, 24);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (c.type === 'emblem') {
+                    drawLeftChestInsignia(ctx, 0, 0, false, state.emblemType, trimHex, 0);
+                } else if (c.type === 'placket') {
+                    ctx.fillStyle = trimHex;
+                    ctx.fillRect(-14, -60, 3.8, 120);
+                    ctx.fillRect(10, -60, 3.8, 120);
+                    drawRealisticButton(ctx, 0, -18, 6.2, trimHex);
+                    drawRealisticButton(ctx, 0, 20, 6.2, trimHex);
+                }
+                ctx.restore();
+
+                // 3. Outer Ring Border
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(c.rx, c.ry, ringR, 0, Math.PI * 2);
+                ctx.strokeStyle = isSelected ? '#7ce636' : trimHex;
+                ctx.lineWidth = isSelected ? 4.5 : 3;
+                ctx.stroke();
+
+                // 4. Label Under Callout Circle
+                ctx.font = '700 11px Inter, sans-serif';
+                ctx.fillStyle = state.darkTheme ? '#e2ece4' : '#13331e';
+                ctx.textAlign = 'center';
+                ctx.fillText(c.title, c.rx, c.ry + ringR + 16);
+                ctx.fillText(c.sub, c.rx, c.ry + ringR + 29);
+                ctx.restore();
+            });
+        }
+
+        /***********************************************************************
+         * 6. MAIN ENGINE 1 STUDIO RENDER LOOP
+         ***********************************************************************/
+        function renderStudioClothEngine() {
+            const canvas = document.getElementById('studioClothCanvas');
+            if (!canvas) return;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+                canvas.width = w * dpr;
+                canvas.height = h * dpr;
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, w, h);
+
+            // Base pose angle from selected studio angle button
+            let baseAngle = 0.22;
+            if (state.studioAngle === 'front' || state.studioAngle === 'back') baseAngle = 0.04;
+            if (state.studioAngle === 'side') baseAngle = 0.56;
+
+            const baseScale = Math.min(w / 1180, h / 740) * 1.08;
+
+            if (state.displayMode === 'both' || state.displayMode === 'fullOutfit') {
+                const withSlacks = state.displayMode === 'fullOutfit';
+                const s = withSlacks ? baseScale * 0.78 : baseScale * 0.96;
+                const yCenter = withSlacks ? h * 0.41 : h * 0.49;
+                const spacing = Math.min(w * 0.16, 195);
+
+                // Female Uniform on Left
+                drawPhotorealisticGarment(ctx, {
+                    cx: w * 0.5 - spacing,
+                    cy: yCenter + 12 * s,
+                    scale: s,
+                    isFemale: true,
+                    bodyHex: state.bodyColor,
+                    trimHex: state.trimColor,
+                    collarSolid: state.collarSolid,
+                    emblemType: state.emblemType,
+                    poseAngle: baseAngle,
+                    withSlacks,
+                    label: 'FEMALE SHIRT'
+                });
+
+                // Male Uniform on Right
+                drawPhotorealisticGarment(ctx, {
+                    cx: w * 0.5 + spacing,
+                    cy: yCenter,
+                    scale: s * 1.04,
+                    isFemale: false,
+                    bodyHex: state.bodyColor,
+                    trimHex: state.trimColor,
+                    collarSolid: state.collarSolid,
+                    emblemType: state.emblemType,
+                    poseAngle: -baseAngle,
+                    withSlacks,
+                    label: 'MALE SHIRT'
+                });
+
+                // If Slide 6 (Official School Seal Hero Showcase), draw the large central zoomed seal badge above the two shirts (matching our generated mockup!)
+                if (SLIDES[state.currentSlide]?.showCenterSealHero) {
+                    const sealR = Math.min(68, w * 0.065);
+                    const sealX = w * 0.5;
+                    const sealY = yCenter - 165 * s;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(sealX, sealY, sealR + 7, 0, Math.PI * 2);
+                    ctx.fillStyle = state.bodyColor;
+                    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                    ctx.shadowBlur = 20;
+                    ctx.fill();
+                    ctx.lineWidth = 3.5;
+                    ctx.strokeStyle = state.trimColor;
+                    ctx.stroke();
+                    ctx.drawImage(sealCacheCanvas, sealX - sealR, sealY - sealR, sealR * 2, sealR * 2);
+                    ctx.restore();
+                }
+
+            } else if (state.displayMode === 'female') {
+                const s = baseScale * 1.05;
+                drawPhotorealisticGarment(ctx, {
+                    cx: w * 0.5,
+                    cy: h * 0.49,
+                    scale: s,
+                    isFemale: true,
+                    bodyHex: state.bodyColor,
+                    trimHex: state.trimColor,
+                    collarSolid: state.collarSolid,
+                    emblemType: state.emblemType,
+                    poseAngle: baseAngle,
+                    withSlacks: false,
+                    label: 'FEMALE SHIRT DETAILS'
+                });
+                drawTechnicalCalloutsOverlay(ctx, w, h, s, true);
+
+            } else if (state.displayMode === 'male') {
+                const s = baseScale * 1.05;
+                drawPhotorealisticGarment(ctx, {
+                    cx: w * 0.5,
+                    cy: h * 0.49,
+                    scale: s,
+                    isFemale: false,
+                    bodyHex: state.bodyColor,
+                    trimHex: state.trimColor,
+                    collarSolid: state.collarSolid,
+                    emblemType: state.emblemType,
+                    poseAngle: baseAngle,
+                    withSlacks: false,
+                    label: 'MALE SHIRT DETAILS'
+                });
+                drawTechnicalCalloutsOverlay(ctx, w, h, s, false);
+
+            } else if (state.displayMode === 'grid4') {
+                // 2x2 Grid showing all 4 Recommended Color Options side-by-side (matching the generated Color Options sheet)
+                const options = ['sage', 'blue', 'cream', 'sand'];
+                const s = baseScale * 0.52;
+                const colOffset = Math.min(w * 0.145, 185);
+                const rowOffset = Math.min(h * 0.19, 145);
+
+                options.forEach((key, idx) => {
+                    const p = COLOR_PRESETS[key];
+                    const col = idx % 2 === 0 ? -1 : 1;
+                    const row = idx < 2 ? -1 : 1;
+                    const gx = w * 0.5 + col * colOffset;
+                    const gy = h * 0.51 + row * rowOffset;
+
+                    // Highlight active option box
+                    if (state.presetKey === key) {
+                        ctx.save();
+                        ctx.strokeStyle = p.trim;
+                        ctx.lineWidth = 2;
+                        ctx.fillStyle = state.darkTheme ? 'rgba(255,255,255,0.03)' : 'rgba(22,66,38,0.035)';
+                        ctx.beginPath();
+                        ctx.roundRect(gx - 135 * s * 1.5, gy - 190 * s, 270 * s * 1.5, 360 * s, 20);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    // Title above pair
+                    ctx.save();
+                    ctx.font = '700 12px Inter, sans-serif';
+                    ctx.fillStyle = state.darkTheme ? '#e2ece4' : '#112618';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(p.title, gx, gy - 150 * s);
+                    ctx.restore();
+
+                    // Female + Male Pair
+                    drawPhotorealisticGarment(ctx, {
+                        cx: gx - 68 * s,
+                        cy: gy + 10 * s,
+                        scale: s,
+                        isFemale: true,
+                        bodyHex: p.body,
+                        trimHex: p.trim,
+                        collarSolid: p.collarSolid,
+                        emblemType: state.emblemType,
+                        poseAngle: 0.22
+                    });
+                    drawPhotorealisticGarment(ctx, {
+                        cx: gx + 68 * s,
+                        cy: gy,
+                        scale: s * 1.05,
+                        isFemale: false,
+                        bodyHex: p.body,
+                        trimHex: p.trim,
+                        collarSolid: p.collarSolid,
+                        emblemType: state.emblemType,
+                        poseAngle: -0.22
+                    });
+                });
+            }
+
+            ctx.restore();
+
+            // Update Optical Magnifier Loupe if active
+            if (state.loupeEnabled) {
+                updateOpticalLoupeCanvas(canvas, dpr);
+            }
+        }
+
+        function updateOpticalLoupeCanvas(sourceCanvas, dpr) {
+            const loupe = document.getElementById('opticalLoupe');
+            const lCanvas = document.getElementById('loupeCanvas');
+            if (!loupe || !lCanvas) return;
+
+            const lCtx = lCanvas.getContext('2d');
+            const zoom = 2.4;
+            const lw = lCanvas.width;
+            const lh = lCanvas.height;
+
+            lCtx.clearRect(0, 0, lw, lh);
+            lCtx.fillStyle = state.darkTheme ? '#101b14' : '#eef1ed';
+            lCtx.fillRect(0, 0, lw, lh);
+
+            const sx = state.mouseX * dpr - (lw / zoom) / 2;
+            const sy = state.mouseY * dpr - (lh / zoom) / 2;
+            lCtx.drawImage(sourceCanvas, sx, sy, lw / zoom, lh / zoom, 0, 0, lw, lh);
+
+            // Crosshair reticle inside loupe
+            lCtx.strokeStyle = 'rgba(22, 66, 38, 0.25)';
+            lCtx.lineWidth = 1;
+            lCtx.beginPath();
+            lCtx.moveTo(lw / 2 - 14, lh / 2); lCtx.lineTo(lw / 2 + 14, lh / 2);
+            lCtx.moveTo(lw / 2, lh / 2 - 14); lCtx.lineTo(lw / 2, lh / 2 + 14);
+            lCtx.stroke();
+        }
+
+        /***********************************************************************
+         * 7. ENGINE 2: REAL 3D GLTF BAKED CLOTH MODEL (`shirt_baked.glb`)
+         * Uses Three.js GLTFLoader + OrbitControls + Custom 2048x2048 UV Baker
+         ***********************************************************************/
+        let glbScene, glbCamera, glbRenderer, glbControls;
+        let glbFemaleMesh = null, glbMaleMesh = null;
+        let glbUniformMaterial = null;
+        let glbInitialized = false;
+
+        function bakeUniformUVTexture() {
+            const uvCanvas = document.createElement('canvas');
+            uvCanvas.width = 2048;
+            uvCanvas.height = 2048;
+            const ctx = uvCanvas.getContext('2d');
+
+            // 1. Base Torso Cloth Color across UV Map
+            ctx.fillStyle = state.bodyColor;
+            ctx.fillRect(0, 0, 2048, 2048);
+
+            // 2. Woven Twill Micro-Texture across entire UV space
+            const pat = getTwillWeavePattern(ctx);
+            if (pat) {
+                ctx.fillStyle = pat;
+                ctx.fillRect(0, 0, 2048, 2048);
+            }
+
+            // 3. Bake Center-Front Double-Piped Button Placket & Collar Trim onto Front UV Island
+            // Standard shirt_baked.glb front torso center sits around UV X = 0.26..0.50 depending on island layout;
+            // We also apply a world-projected front decal mesh so the placket & school seal align with 100% precision!
+            const tex = new THREE.CanvasTexture(uvCanvas);
+            tex.anisotropy = 4;
+            tex.flipY = false;
+            return tex;
+        }
+
+        // Build custom front Placket + Left Chest Seal + Collar Piping Decal Overlay Group attached to each 3D GLB shirt
+        function buildGLBUniformDetailingOverlay(isFemale) {
+            const detailGroup = new THREE.Group();
+            detailGroup.name = 'uniformDetails';
+
+            // Create a high-res transparent front garment overlay texture (Placket + 5 Buttons + Left Chest Seal)
+            const decalCanvas = document.createElement('canvas');
+            decalCanvas.width = 1024;
+            decalCanvas.height = 1024;
+            const ctx = decalCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 1024, 1024);
+
+            // Center Double-Piped Button Placket
+            const px = 512;
+            ctx.fillStyle = state.bodyColor;
+            ctx.fillRect(px - 28, 150, 56, 820);
+            ctx.fillStyle = state.trimColor;
+            ctx.fillRect(px - 32, 140, 10, 835);
+            ctx.fillRect(px + 22, 140, 10, 835);
+
+            // 5 Buttons
+            for (let b = 0; b < 5; b++) {
+                drawRealisticButton(ctx, px, 230 + b * 155, 16, state.trimColor);
+            }
+
+            // Left Chest School Seal or "MIS SHS"
+            drawLeftChestInsignia(ctx, px + 165, 310, isFemale, state.emblemType, state.trimColor, 0);
+
+            const decalTex = new THREE.CanvasTexture(decalCanvas);
+            decalTex.anisotropy = 4;
+
+            // Curved Front Chest & Placket Overlay Surface conforming to the sculpted 3D shirt chest
+            const overlayGeo = new THREE.CylinderGeometry(0.29, 0.28, 0.56, 32, 1, true, -Math.PI * 0.25, Math.PI * 0.5);
+            const overlayMat = new THREE.MeshStandardMaterial({
+                map: decalTex,
+                transparent: true,
+                roughness: 0.65,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2
+            });
+            const overlayMesh = new THREE.Mesh(overlayGeo, overlayMat);
+            overlayMesh.position.set(0, 0.01, -0.13);
+            detailGroup.add(overlayMesh);
+
+            return detailGroup;
+        }
+
+        function refreshGLBUniformMaterials() {
+            if (!glbInitialized) return;
+            const uvTex = bakeUniformUVTexture();
+            if (glbUniformMaterial) {
+                glbUniformMaterial.color.set('#ffffff');
+                glbUniformMaterial.map = uvTex;
+                glbUniformMaterial.needsUpdate = true;
+            }
+            [
+                { root: glbFemaleMesh, isFemale: true },
+                { root: glbMaleMesh, isFemale: false }
+            ].forEach(({ root, isFemale }) => {
+                if (!root) return;
+                const oldOverlay = root.getObjectByName('uniformDetails');
+                if (oldOverlay) root.remove(oldOverlay);
+                root.add(buildGLBUniformDetailingOverlay(isFemale));
+            });
+        }
+
+        function initGLBViewerEngine() {
+            if (glbInitialized) return;
+            glbInitialized = true;
+
+            const container = document.getElementById('glbViewerContainer');
+            const canvas = document.getElementById('glbWebGLCanvas');
+
+            glbScene = new THREE.Scene();
+            glbCamera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 100);
+            glbCamera.position.set(0, 0.1, 2.35);
+
+            glbRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            glbRenderer.setSize(window.innerWidth, window.innerHeight);
+            glbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            glbRenderer.shadowMap.enabled = true;
+
+            glbControls = new THREE.OrbitControls(glbCamera, glbRenderer.domElement);
+            glbControls.enableDamping = true;
+            glbControls.dampingFactor = 0.06;
+            glbControls.minDistance = 1.1;
+            glbControls.maxDistance = 4.5;
+
+            // Studio Lighting for 3D GLB Cloth
+            glbScene.add(new THREE.AmbientLight(0xffffff, 0.75));
+            const keyLight = new THREE.DirectionalLight(0xfffbf2, 0.72);
+            keyLight.position.set(2.5, 4, 3.5);
+            keyLight.castShadow = true;
+            glbScene.add(keyLight);
+
+            const fillLight = new THREE.DirectionalLight(0xe4f2e8, 0.45);
+            fillLight.position.set(-3, 2, 2.5);
+            glbScene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.35);
+            rimLight.position.set(0, 3, -3.5);
+            glbScene.add(rimLight);
+
+            glbUniformMaterial = new THREE.MeshStandardMaterial({
+                map: bakeUniformUVTexture(),
+                roughness: 0.72,
+                metalness: 0.03,
+                side: THREE.DoubleSide
+            });
+
+            // Load real Blender-sculpted cloth mesh `shirt_baked.glb` from open-source Three.js AI Shirt Configurator repo
+            const loader = new THREE.GLTFLoader();
+            const glbUrls = [
+                'https://raw.githubusercontent.com/adrianhajdin/project_threejs_ai/main/client/public/shirt_baked.glb',
+                'https://cdn.jsdelivr.net/gh/adrianhajdin/project_threejs_ai@main/client/public/shirt_baked.glb'
+            ];
+
+            function tryLoadGLB(idx) {
+                if (idx >= glbUrls.length) {
+                    buildOfflineOrganicClothFallback();
+                    return;
+                }
+                loader.load(
+                    glbUrls[idx],
+                    (gltf) => {
+                        const baseModel = gltf.scene;
+                        baseModel.traverse(child => {
+                            if (child.isMesh) {
+                                child.material = glbUniformMaterial;
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+
+                        // Female & Male Sculpted 3D Cloth Instances
+                        glbFemaleMesh = baseModel.clone();
+                        glbFemaleMesh.scale.set(0.92, 0.96, 0.90);
+                        glbFemaleMesh.position.set(-0.44, 0, 0);
+                        glbFemaleMesh.rotation.y = 0.22;
+                        glbFemaleMesh.add(buildGLBUniformDetailingOverlay(true));
+
+                        glbMaleMesh = baseModel.clone();
+                        glbMaleMesh.scale.set(1.04, 1.04, 1.02);
+                        glbMaleMesh.position.set(0.44, 0.02, 0);
+                        glbMaleMesh.rotation.y = -0.22;
+                        glbMaleMesh.add(buildGLBUniformDetailingOverlay(false));
+
+                        glbScene.add(glbFemaleMesh);
+                        glbScene.add(glbMaleMesh);
+
+                        const statusBanner = document.getElementById('glbStatusBanner');
+                        const statusDot = document.getElementById('glbStatusDot');
+                        const statusText = document.getElementById('glbStatusText');
+                        if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                        if (statusText) statusText.textContent = 'Real Sculpted 3D Cloth Mesh (shirt_baked.glb) Active • Drag to Orbit 360°';
+                        setTimeout(() => { if (statusBanner) statusBanner.style.opacity = '0.75'; }, 3000);
+                    },
+                    undefined,
+                    () => tryLoadGLB(idx + 1)
+                );
+            }
+
+            tryLoadGLB(0);
+        }
+
+        // Seamless organic cloth mesh fallback with harmonic wrinkle displacement if user is offline
+        function buildOfflineOrganicClothFallback() {
+            const geo = new THREE.CylinderGeometry(0.28, 0.27, 0.62, 64, 48, false);
+            const pos = geo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+                const angle = Math.atan2(z, x);
+                const wrinkle = 0.008 * Math.sin(angle * 7 + y * 18) * Math.cos(y * 12);
+                pos.setXYZ(i, x * (1 + wrinkle), y, z * 0.65 * (1 + wrinkle));
+            }
+            geo.computeVertexNormals();
+
+            glbFemaleMesh = new THREE.Mesh(geo, glbUniformMaterial);
+            glbFemaleMesh.position.set(-0.44, 0, 0);
+            glbFemaleMesh.add(buildGLBUniformDetailingOverlay(true));
+
+            glbMaleMesh = new THREE.Mesh(geo.clone(), glbUniformMaterial);
+            glbMaleMesh.position.set(0.44, 0, 0);
+            glbMaleMesh.add(buildGLBUniformDetailingOverlay(false));
+
+            glbScene.add(glbFemaleMesh, glbMaleMesh);
+            const statusText = document.getElementById('glbStatusText');
+            if (statusText) statusText.textContent = 'Offline Organic 3D Cloth Mesh Active • Drag to Orbit 360°';
+        }
+
+        /***********************************************************************
+         * 8. UI CONTROLS, CUSTOMIZERS & SLIDE CONTROLLER
+         ***********************************************************************/
+        function switchRenderEngine(engine) {
+            state.engine = engine;
+            const studioCanvas = document.getElementById('studioClothCanvas');
+            const glbContainer = document.getElementById('glbViewerContainer');
+            const btnStudio = document.getElementById('engineBtn-studio');
+            const btnGlb = document.getElementById('engineBtn-glb');
+
+            if (engine === 'glb') {
+                initGLBViewerEngine();
+                refreshGLBUniformMaterials();
+                studioCanvas.classList.add('hidden');
+                glbContainer.classList.remove('hidden');
+                btnGlb.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center gap-1.5 transition';
+                btnStudio.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold opacity-80 hover:opacity-100 flex items-center gap-1.5 transition';
+            } else {
+                glbContainer.classList.add('hidden');
+                studioCanvas.classList.remove('hidden');
+                btnStudio.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center gap-1.5 transition';
+                btnGlb.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold opacity-80 hover:opacity-100 flex items-center gap-1.5 transition';
+            }
+        }
+
+        function applyColorPreset(key) {
+            const p = COLOR_PRESETS[key];
+            if (!p) return;
+            state.presetKey = key;
+            state.bodyColor = p.body;
+            state.trimColor = p.trim;
+            state.collarSolid = p.collarSolid;
+
+            document.getElementById('customBodyPicker').value = p.body;
+            document.getElementById('customTrimPicker').value = p.trim;
+            document.getElementById('activeShadeBadge').textContent = p.badge;
+            document.getElementById('printSpecColor').textContent = `${p.title} (${p.body} / ${p.trim})`;
+
+            Object.keys(COLOR_PRESETS).forEach(k => {
+                const btn = document.getElementById(`presetBtn-${k}`);
+                if (!btn) return;
+                if (k === key) {
+                    btn.className = 'w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold ring-2 ring-[#164226] bg-emerald-900/10 transition';
+                } else {
+                    btn.className = 'w-full flex items-center gap-2.5 p-1.5 rounded-xl text-left text-xs font-semibold hover:bg-emerald-900/10 transition';
+                }
+            });
+
+            refreshGLBUniformMaterials();
+        }
+
+        function applyCustomColors() {
+            state.presetKey = 'custom';
+            state.bodyColor = document.getElementById('customBodyPicker').value;
+            state.trimColor = document.getElementById('customTrimPicker').value;
+            state.collarSolid = false;
+            document.getElementById('activeShadeBadge').textContent = 'Custom';
+            document.getElementById('printSpecColor').textContent = `Custom Shade (${state.bodyColor} / ${state.trimColor})`;
+            refreshGLBUniformMaterials();
+        }
+
+        function setEmblemType(type) {
+            state.emblemType = type;
+            const btnSeal = document.getElementById('emblemBtn-seal');
+            const btnText = document.getElementById('emblemBtn-text');
+
+            if (type === 'seal') {
+                btnSeal.className = 'py-2 px-2.5 rounded-xl font-bold bg-[#164226] text-white shadow flex items-center justify-center gap-1.5';
+                btnText.className = 'py-2 px-2.5 rounded-xl font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-1.5';
+                document.getElementById('printSpecEmblem').textContent = 'Official Circular Magtanggol Integrated School Seal';
+            } else {
+                btnText.className = 'py-2 px-2.5 rounded-xl font-bold bg-[#164226] text-white shadow flex items-center justify-center gap-1.5';
+                btnSeal.className = 'py-2 px-2.5 rounded-xl font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-1.5';
+                document.getElementById('printSpecEmblem').textContent = '"MIS SHS" Embroidered Left-Chest Typography';
+            }
+            refreshGLBUniformMaterials();
+        }
+
+        function setDisplayMode(mode) {
+            state.displayMode = mode;
+            ['both', 'fullOutfit', 'female', 'male', 'grid4'].forEach(m => {
+                const btn = document.getElementById(`modeBtn-${m}`);
+                if (!btn) return;
+                if (m === mode) {
+                    btn.className = (m === 'grid4' ? 'col-span-2 ' : '') + 'py-1.5 px-2 rounded-xl bg-[#164226] text-white shadow flex items-center justify-center gap-1.5';
+                } else {
+                    btn.className = (m === 'grid4' ? 'col-span-2 ' : '') + 'py-1.5 px-2 rounded-xl bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-1.5';
+                }
+            });
+        }
+
+        function setStudioAngle(angle) {
+            state.studioAngle = angle;
+            state.targetTiltY = 0;
+            state.targetTiltX = 0;
+            ['angled', 'front', 'side', 'back'].forEach(a => {
+                const btn = document.getElementById(`angleBtn-${a}`);
+                if (!btn) return;
+                btn.className = (a === angle)
+                    ? 'py-1.5 rounded-lg bg-[#164226] text-white'
+                    : 'py-1.5 rounded-lg bg-emerald-900/10 hover:bg-emerald-900/20';
+            });
+        }
+
+        function selectDetailCallout(id) {
+            state.activeCallout = id;
+            for (let i = 0; i < 5; i++) {
+                const b = document.getElementById(`calloutBtn-${i}`);
+                if (!b) continue;
+                if (i === id) {
+                    b.className = 'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white flex items-center justify-between shadow transition';
+                } else {
+                    b.className = 'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/5 hover:bg-emerald-900/15 flex items-center justify-between transition';
+                }
+            }
+            if (id !== null && state.displayMode !== 'female' && state.displayMode !== 'male') {
+                setDisplayMode('female');
+            }
+        }
+
+        function toggleOpticalLoupe() {
+            state.loupeEnabled = !state.loupeEnabled;
+            const loupe = document.getElementById('opticalLoupe');
+            const btn = document.getElementById('btnLoupeToggle');
+            if (state.loupeEnabled) {
+                loupe.classList.remove('hidden');
+                btn.className = 'w-full py-2 px-3 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center justify-center gap-2 transition';
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-minus"></i><span>Disable Optical Weave Loupe</span>';
+            } else {
+                loupe.classList.add('hidden');
+                btn.className = 'w-full py-2 px-3 rounded-xl text-xs font-bold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center justify-center gap-2 transition';
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Enable Optical Weave Loupe</span>';
+            }
+        }
+
+        function toggleAutoTurntable() {
+            state.autoTurntable = !state.autoTurntable;
+            const btn = document.getElementById('btnAutoTurntable');
+            btn.className = state.autoTurntable
+                ? 'px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center gap-1.5 transition'
+                : 'px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center gap-1.5 transition';
+        }
+
+        function toggleStudioTheme() {
+            state.darkTheme = !state.darkTheme;
+            const body = document.getElementById('appBody');
+            const icon = document.getElementById('themeToggleIcon');
+            if (state.darkTheme) {
+                body.classList.remove('studio-light');
+                body.classList.add('studio-dark');
+                document.documentElement.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-xs text-amber-400';
+            } else {
+                body.classList.remove('studio-dark');
+                body.classList.add('studio-light');
+                document.documentElement.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-xs';
+            }
+        }
+
+        function toggleLeftPanel() {
+            const panel = document.getElementById('leftInspectorPanel');
+            const expandBtn = document.getElementById('leftPanelExpandBtn');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                expandBtn.classList.add('hidden');
+            } else {
+                panel.classList.add('hidden');
+                expandBtn.classList.remove('hidden');
+            }
+        }
+
+        // Slide Navigation Controller
+        function goToSlide(idx) {
+            if (idx < 0 || idx >= SLIDES.length) return;
+            state.currentSlide = idx;
+            const s = SLIDES[idx];
+
+            document.getElementById('slideStepBadge').textContent = s.step;
+            document.getElementById('slideTagline').textContent = s.tag;
+            document.getElementById('slideHeadline').textContent = s.headline;
+            document.getElementById('slideDescription').textContent = s.desc;
+
+            for (let i = 0; i < SLIDES.length; i++) {
+                const nav = document.getElementById(`slideNav-${i}`);
+                if (!nav) continue;
+                nav.className = (i === idx)
+                    ? 'slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white whitespace-nowrap shadow transition'
+                    : 'slide-nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold opacity-75 hover:opacity-100 whitespace-nowrap transition';
+            }
+
+            if (s.forceEmblem) setEmblemType(s.forceEmblem);
+            setDisplayMode(s.displayMode);
+            setStudioAngle(s.angle);
+            switchRenderEngine(s.engine);
+        }
+
+        function nextSlide() {
+            goToSlide((state.currentSlide + 1) % SLIDES.length);
+        }
+
+        function prevSlide() {
+            goToSlide((state.currentSlide - 1 + SLIDES.length) % SLIDES.length);
+        }
+
+        function toggleAutoPlayPresentation() {
+            const btn = document.getElementById('btnAutoPlay');
+            const icon = document.getElementById('autoPlayIcon');
+            if (state.autoPlayTimer) {
+                clearInterval(state.autoPlayTimer);
+                state.autoPlayTimer = null;
+                btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-900/10 hover:bg-emerald-900/20 flex items-center gap-1.5 transition';
+                icon.className = 'fa-solid fa-play text-[10px]';
+            } else {
+                state.autoPlayTimer = setInterval(nextSlide, 5500);
+                btn.className = 'px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#164226] text-white shadow flex items-center gap-1.5 transition';
+                icon.className = 'fa-solid fa-pause text-[10px]';
+            }
+        }
+
+        // Modals & Custom Logo Upload
+        function openSealInspector() {
+            const m = document.getElementById('sealModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeSealInspector() {
+            const m = document.getElementById('sealModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        function openPrintModal() {
+            const m = document.getElementById('printModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closePrintModal() {
+            const m = document.getElementById('printModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function uploadCustomLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    state.customLogoImage = img;
+                    rebuildOfficialSealCache();
+                    setEmblemType('seal');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /***********************************************************************
+         * 9. INTERACTIVE POINTER EVENTS & MASTER ANIMATION LOOP
+         ***********************************************************************/
+        function initViewportInteractions() {
+            const stage = document.getElementById('viewportStage');
+            const loupe = document.getElementById('opticalLoupe');
+            let lastX = 0, lastY = 0;
+
+            stage.addEventListener('pointerdown', (e) => {
+                if (state.engine === 'glb') return;
+                state.isPointerDown = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+
+                // If in 4-Colorway Grid mode, clicking a quadrant selects that colorway preset!
+                if (state.displayMode === 'grid4') {
+                    const isRight = e.clientX > window.innerWidth / 2;
+                    const isBottom = e.clientY > window.innerHeight / 2;
+                    const picked = !isBottom ? (!isRight ? 'sage' : 'blue') : (!isRight ? 'cream' : 'sand');
+                    applyColorPreset(picked);
+                }
+            });
+
+            window.addEventListener('pointerup', () => {
+                state.isPointerDown = false;
+                // Gently spring back toward center pose unless turntable is active
+                if (!state.autoTurntable) {
+                    state.targetTiltY *= 0.35;
+                    state.targetTiltX *= 0.35;
+                }
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                state.mouseX = e.clientX;
+                state.mouseY = e.clientY;
+
+                if (state.loupeEnabled && loupe) {
+                    loupe.style.left = `${e.clientX - 96}px`;
+                    loupe.style.top = `${e.clientY - 96}px`;
+                }
+
+                if (state.isPointerDown && state.engine === 'studio') {
+                    const dx = e.clientX - lastX;
+                    const dy = e.clientY - lastY;
+                    state.targetTiltY = Math.max(-0.55, Math.min(0.55, state.targetTiltY + dx * 0.004));
+                    state.targetTiltX = Math.max(-0.28, Math.min(0.28, state.targetTiltX + dy * 0.003));
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                }
+            });
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') nextSlide();
+                if (e.key === 'ArrowLeft') prevSlide();
+            });
+
+            window.addEventListener('resize', () => {
+                if (glbInitialized && glbRenderer && glbCamera) {
+                    glbCamera.aspect = window.innerWidth / window.innerHeight;
+                    glbCamera.updateProjectionMatrix();
+                    glbRenderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            });
+        }
+
+        function masterAnimationLoop(timestamp) {
+            requestAnimationFrame(masterAnimationLoop);
+            const t = (timestamp || 0) * 0.001;
+
+            if (state.autoTurntable) {
+                state.targetTiltY = Math.sin(t * 1.4) * 0.38;
+                state.targetTiltX = Math.cos(t * 0.9) * 0.08;
+            }
+
+            // Smooth spring interpolation for 3D Cloth Tilt
+            state.tiltY += (state.targetTiltY - state.tiltY) * 0.12;
+            state.tiltX += (state.targetTiltX - state.tiltX) * 0.12;
+
+            if (state.engine === 'studio') {
+                renderStudioClothEngine();
+            } else if (glbInitialized && glbRenderer && glbScene && glbCamera) {
+                if (state.autoTurntable && glbFemaleMesh && glbMaleMesh) {
+                    glbFemaleMesh.rotation.y += 0.008;
+                    glbMaleMesh.rotation.y += 0.008;
+                }
+                if (glbControls) glbControls.update();
+                glbRenderer.render(glbScene, glbCamera);
+            }
+        }
+
+        window.onload = function() {
+            rebuildOfficialSealCache();
+            initViewportInteractions();
+            goToSlide(0);
+            requestAnimationFrame(masterAnimationLoop);
+        };
+    </script>
+</body>
+</html>
